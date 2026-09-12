@@ -18,17 +18,22 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                // Rutas publicas: registro/login y contenido publico de la web (Inicio, Talleres...)
-                .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
-                // Panel del administrador: solo el rol ADMINISTRADOR
-                .requestMatchers("/api/admin/**").hasRole(RoleNames.ADMIN)
-                // Panel de la familia/alumno: solo el rol ALUMNO_FAMILIA
-                .requestMatchers("/api/dashboard/**").hasRole(RoleNames.FAMILY)
-                // Cualquier otra ruta no contemplada arriba: exige estar autenticado, sin rol concreto
-                .anyRequest().authenticated())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-            .httpBasic(Customizer.withDefaults());
+                .authorizeHttpRequests(auth -> auth
+                        // Mas especifico primero: /api/auth/me exige estar autenticado,
+                        // aunque caiga dentro del prefijo /api/auth/** que es publico
+                        .requestMatchers("/api/auth/me").authenticated()
+                        // Rutas publicas: registro/login y contenido publico de la web (Inicio,
+                        // Talleres...)
+                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                        // Panel del administrador: solo el rol ADMINISTRADOR
+                        .requestMatchers("/api/admin/**").hasRole(RoleNames.ADMIN)
+                        // Panel de la familia/alumno: solo el rol ALUMNO_FAMILIA
+                        .requestMatchers("/api/dashboard/**").hasRole(RoleNames.FAMILY)
+                        // Cualquier otra ruta no contemplada arriba: exige estar autenticado, sin rol
+                        // concreto
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
