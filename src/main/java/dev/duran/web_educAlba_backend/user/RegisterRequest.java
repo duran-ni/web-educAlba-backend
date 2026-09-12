@@ -2,9 +2,9 @@ package dev.duran.web_educAlba_backend.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 // Datos que llegan del formulario de registro del frontend
+// La contraseña llega codificada en Base64 (no en texto plano) — ver EncryptFacade/DecryptFacade
 public record RegisterRequest(
 
     @NotBlank
@@ -12,8 +12,7 @@ public record RegisterRequest(
     String email,
 
     @NotBlank
-    @Size (min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     String password
 ) {
-    
+
 }
