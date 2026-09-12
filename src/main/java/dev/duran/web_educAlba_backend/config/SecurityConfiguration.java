@@ -32,6 +32,7 @@ public class SecurityConfiguration {
                         // Cualquier otra ruta no contemplada arriba: exige estar autenticado, sin rol
                         // concreto
                         .anyRequest().authenticated())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .httpBasic(Customizer.withDefaults());
 
