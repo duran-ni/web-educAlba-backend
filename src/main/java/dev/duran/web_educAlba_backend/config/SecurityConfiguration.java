@@ -9,6 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 import dev.duran.web_educAlba_backend.user.RoleNames;
+import jakarta.servlet.http.HttpServletResponse;
 
 // Esquema de autenticacion Basic Auth con sesion por cookies
 @Configuration
@@ -32,9 +33,15 @@ public class SecurityConfiguration {
                         // Cualquier otra ruta no contemplada arriba: exige estar autenticado, sin rol
                         // concreto
                         .anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register", "/api/auth/logout"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(Customizer.withDefaults())
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .logoutSuccessHandler((request, response, authentication) -> response
+                                .setStatus(HttpServletResponse.SC_NO_CONTENT)));
 
         return http.build();
     }
