@@ -24,7 +24,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/me").authenticated()
                         // Rutas publicas: registro/login y contenido publico de la web (Inicio,
                         // Talleres...)
-                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/public/**", "/error").permitAll()
                         // Panel del administrador: solo el rol ADMINISTRADOR
                         .requestMatchers("/api/admin/**").hasRole(RoleNames.ADMIN)
                         // Panel de la familia/alumno: solo el rol ALUMNO_FAMILIA
