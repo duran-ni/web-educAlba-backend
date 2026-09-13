@@ -33,7 +33,7 @@ public class SecurityConfiguration {
                         // Cualquier otra ruta no contemplada arriba: exige estar autenticado, sin rol
                         // concreto
                         .anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register", "/api/auth/logout"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register", "/api/auth/logout", "/api/admin/**"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .httpBasic(Customizer.withDefaults())
                 .logout(logout -> logout
