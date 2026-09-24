@@ -3,6 +3,7 @@ package dev.duran.web_educAlba_backend.academy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.List;
 
 import java.time.LocalDate;
 
@@ -37,10 +38,12 @@ class PublicWorkshopControllerTest {
             .apply(SecurityMockMvcConfigurers.springSecurity())
             .build();
 
-        // Aísla cada test: sin esto, talleres creados por otras clases de test
-        // (que comparten la misma base de datos de Testcontainers) podrían
-        // interferir con la comprobación de "no hay talleres próximos"
-        workshopRepository.deleteAll();
+        // Desactiva (no borra, para no violar la clave foránea de agenda_events)
+        // cualquier taller activo que hayan dejado otras clases de test, para que
+        // el escenario "sin talleres próximos" sea fiable
+        List<Workshop> existingWorkshops = workshopRepository.findAll();
+        existingWorkshops.forEach(workshop -> workshop.setActive(false));
+        workshopRepository.saveAll(existingWorkshops);
     }
 
     @Test
