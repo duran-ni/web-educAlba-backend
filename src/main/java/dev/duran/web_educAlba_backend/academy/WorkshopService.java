@@ -1,6 +1,8 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +19,8 @@ public class WorkshopService {
     @Transactional(readOnly = true)
     public List<WorkshopResponse> getAll() {
         return workshopRepository.findAll().stream()
-            .map(this::toResponse)
-            .toList();
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -30,13 +32,13 @@ public class WorkshopService {
     @Transactional
     public WorkshopResponse create(WorkshopRequest request) {
         Workshop workshop = Workshop.builder()
-            .name(request.name())
-            .description(request.description())
-            .date(request.date())
-            .recommendedAge(request.recommendedAge())
-            .room(request.room())
-            .active(request.active())
-            .build();
+                .name(request.name())
+                .description(request.description())
+                .date(request.date())
+                .recommendedAge(request.recommendedAge())
+                .room(request.room())
+                .active(request.active())
+                .build();
 
         Workshop savedWorkshop = workshopRepository.save(workshop);
         return toResponse(savedWorkshop);
@@ -65,17 +67,23 @@ public class WorkshopService {
 
     private Workshop findWorkshopOrThrow(Long id) {
         return workshopRepository.findById(id)
-            .orElseThrow(() -> new WorkshopNotFoundException(id));
+                .orElseThrow(() -> new WorkshopNotFoundException(id));
     }
 
     private WorkshopResponse toResponse(Workshop workshop) {
         return new WorkshopResponse(
-            workshop.getId(),
-            workshop.getName(),
-            workshop.getDescription(),
-            workshop.getDate(),
-            workshop.getRecommendedAge(),
-            workshop.getRoom(),
-            workshop.isActive());
+                workshop.getId(),
+                workshop.getName(),
+                workshop.getDescription(),
+                workshop.getDate(),
+                workshop.getRecommendedAge(),
+                workshop.getRoom(),
+                workshop.isActive());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<WorkshopResponse> getNextUpcoming() {
+        return workshopRepository.findFirstByActiveTrueAndDateAfterOrderByDateAsc(LocalDate.now())
+                .map(this::toResponse);
     }
 }
