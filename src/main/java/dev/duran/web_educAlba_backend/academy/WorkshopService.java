@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,5 +86,13 @@ public class WorkshopService {
     public Optional<WorkshopResponse> getNextUpcoming() {
         return workshopRepository.findFirstByActiveTrueAndDateAfterOrderByDateAsc(LocalDate.now())
                 .map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkshopResponse> getAllActive() {
+        return workshopRepository.findByActiveTrue().stream()
+                .sorted(Comparator.comparing(Workshop::getDate))
+                .map(this::toResponse)
+                .toList();
     }
 }
