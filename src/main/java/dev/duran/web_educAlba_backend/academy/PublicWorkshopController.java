@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +15,11 @@ public class PublicWorkshopController {
 
     public PublicWorkshopController(WorkshopService workshopService) {
         this.workshopService = workshopService;
+    }
+
+    @GetMapping
+    public List<WorkshopResponse> getAllActive() {
+        return workshopService.getAllActive();
     }
 
     @GetMapping("/next")
