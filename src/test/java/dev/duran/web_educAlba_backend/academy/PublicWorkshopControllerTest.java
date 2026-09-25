@@ -66,4 +66,39 @@ class PublicWorkshopControllerTest {
         mockMvc.perform(get("/api/public/workshops/next"))
             .andExpect(status().isNoContent());
     }
+
+     @Test
+    @DisplayName("A visitor can list all active workshops ordered by date, without authentication")
+    void testGetAllActive_ReturnsOrderedList() throws Exception {
+        LocalDate today = LocalDate.now();
+        workshopRepository.save(Workshop.builder()
+            .name("Más adelante")
+            .date(today.plusDays(10))
+            .active(true)
+            .build());
+        workshopRepository.save(Workshop.builder()
+            .name("El próximo")
+            .date(today.plusDays(3))
+            .active(true)
+            .build());
+        workshopRepository.save(Workshop.builder()
+            .name("Inactivo")
+            .date(today.plusDays(1))
+            .active(false)
+            .build());
+
+        mockMvc.perform(get("/api/public/workshops"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].name").value("El próximo"))
+            .andExpect(jsonPath("$[1].name").value("Más adelante"));
+    }
+
+    @Test
+    @DisplayName("An empty list is returned when there are no active workshops")
+    void testGetAllActive_NoActiveWorkshops_ReturnsEmptyList() throws Exception {
+        mockMvc.perform(get("/api/public/workshops"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
 }
