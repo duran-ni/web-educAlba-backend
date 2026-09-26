@@ -36,6 +36,7 @@ public class WorkshopService {
                 .name(request.name())
                 .description(request.description())
                 .date(request.date())
+                .time(request.time())
                 .recommendedAge(request.recommendedAge())
                 .room(request.room())
                 .active(request.active())
@@ -52,6 +53,7 @@ public class WorkshopService {
         workshop.setName(request.name());
         workshop.setDescription(request.description());
         workshop.setDate(request.date());
+        workshop.setTime(request.time());
         workshop.setRecommendedAge(request.recommendedAge());
         workshop.setRoom(request.room());
         workshop.setActive(request.active());
@@ -77,6 +79,7 @@ public class WorkshopService {
                 workshop.getName(),
                 workshop.getDescription(),
                 workshop.getDate(),
+                workshop.getTime(),
                 workshop.getRecommendedAge(),
                 workshop.getRoom(),
                 workshop.isActive());
