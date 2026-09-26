@@ -1,5 +1,6 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -67,6 +68,32 @@ public class EnrollmentService {
     public void delete(Long id) {
         Enrollment enrollment = findEnrollmentOrThrow(id);
         enrollmentRepository.delete(enrollment);
+    }
+
+    @Transactional
+    public List<EnrollmentResponse> createPublic(PublicEnrollmentRequest request) {
+        Student student = Student.builder()
+            .firstName(request.studentName())
+            .lastName("")
+            .age(request.age())
+            .phone(request.phone())
+            .build();
+
+        Student savedStudent = studentRepository.save(student);
+
+        return request.workshopIds().stream()
+            .map(workshopId -> {
+                Workshop workshop = findWorkshopOrThrow(workshopId);
+
+                Enrollment enrollment = Enrollment.builder()
+                    .student(savedStudent)
+                    .workshop(workshop)
+                    .enrollmentDate(LocalDate.now())
+                    .build();
+
+                return toResponse(enrollmentRepository.save(enrollment));
+            })
+            .toList();
     }
 
     private Enrollment findEnrollmentOrThrow(Long id) {
