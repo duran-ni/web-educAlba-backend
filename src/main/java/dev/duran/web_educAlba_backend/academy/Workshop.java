@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,6 +32,7 @@ public class Workshop {
     private String name;
     private String description;
     private LocalDate date;
+    private LocalTime time;
     private String recommendedAge;
     private String room;
 
