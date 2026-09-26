@@ -49,7 +49,7 @@ class AgendaEventControllerTest {
     }
 
     private Long createWorkshop() throws Exception {
-        WorkshopRequest request = new WorkshopRequest("Chess Club", "Weekly chess sessions", LocalDate.now().plusDays(3), "10-16", "Room B", true);
+        WorkshopRequest request = new WorkshopRequest("Chess Club", "Weekly chess sessions", LocalDate.now().plusDays(3), LocalTime.of(9, 0), "10-16", "Room B", true);
 
         String body = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
