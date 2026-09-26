@@ -17,7 +17,7 @@ INSERT INTO workshops (name, description, date, time, recommended_age, active)
 SELECT 'Breakout Halloween',
        'Un escape room tematico de Halloween con retos sencillos y disfraces, pensado para los primeros pasos en el juego cooperativo.',
        DATE '2026-10-30',
-       TIME '10:00:00',
+       TIME '11:00:00',
        '3-6 anos',
        true
 WHERE NOT EXISTS (
@@ -28,7 +28,7 @@ INSERT INTO workshops (name, description, date, time, recommended_age, active)
 SELECT 'Breakout Halloween',
        'Un escape room de Halloween con acertijos y pruebas en equipo adaptados a esta franja de edad.',
        DATE '2026-10-31',
-       TIME '10:00:00',
+       TIME '11:00:00',
        '7-9 anos',
        true
 WHERE NOT EXISTS (
@@ -39,7 +39,7 @@ INSERT INTO workshops (name, description, date, time, recommended_age, active)
 SELECT 'Breakout Halloween',
        'Un escape room de Halloween con retos mas exigentes de logica y trabajo en equipo para los mayores del grupo.',
        DATE '2026-10-31',
-       TIME '10:00:00',
+       TIME '11:00:00',
        '10-12 anos',
        true
 WHERE NOT EXISTS (
