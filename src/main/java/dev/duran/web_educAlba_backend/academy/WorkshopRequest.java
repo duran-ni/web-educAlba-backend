@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,9 @@ public record WorkshopRequest(
 
     @NotNull
     LocalDate date,
+
+    @NotNull
+    LocalTime time,
 
     String recommendedAge,
 
