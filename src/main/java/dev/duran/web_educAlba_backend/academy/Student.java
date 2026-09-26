@@ -34,6 +34,8 @@ public class Student {
     private String firstName;
     private String lastName;
     private String serviceOfInterest;
+    private Integer age;
+    private String phone;
 
     @Enumerated(EnumType.STRING)
     private EducationalStage educationalStage;
