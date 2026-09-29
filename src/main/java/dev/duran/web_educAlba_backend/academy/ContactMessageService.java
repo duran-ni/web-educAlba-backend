@@ -14,15 +14,18 @@ public class ContactMessageService {
     private final ContactMessageRepository contactMessageRepository;
     private final JavaMailSender javaMailSender;
     private final String contactRecipient;
+    private final String fromAddress;
 
     public ContactMessageService(
-        ContactMessageRepository contactMessageRepository,
-        JavaMailSender javaMailSender,
-        @Value("${app.mail.contact-recipient}") String contactRecipient) {
-        this.contactMessageRepository = contactMessageRepository;
-        this.javaMailSender = javaMailSender;
-        this.contactRecipient = contactRecipient;
-    }
+    ContactMessageRepository contactMessageRepository,
+    JavaMailSender javaMailSender,
+    @Value("${app.mail.contact-recipient}") String contactRecipient,
+    @Value("${app.mail.from-address}") String fromAddress) {
+    this.contactMessageRepository = contactMessageRepository;
+    this.javaMailSender = javaMailSender;
+    this.contactRecipient = contactRecipient;
+    this.fromAddress = fromAddress;
+}
 
     @Transactional
     public ContactMessageResponse create(ContactMessageRequest request) {
@@ -42,6 +45,7 @@ public class ContactMessageService {
     // Construye y envía el correo de aviso a la academia con los datos del mensaje recibido
     private void sendNotificationEmail(ContactMessage contactMessage) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromAddress);
         mailMessage.setTo(contactRecipient);
         mailMessage.setReplyTo(contactMessage.getEmail());
         mailMessage.setSubject("Nuevo mensaje de contacto: " + contactMessage.getSubject());
