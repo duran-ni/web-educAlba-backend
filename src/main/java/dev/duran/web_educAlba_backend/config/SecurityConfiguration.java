@@ -2,7 +2,6 @@ package dev.duran.web_educAlba_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,7 +34,14 @@ public class SecurityConfiguration {
                         .anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/register", "/api/auth/logout", "/api/admin/**", "/api/public/**"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .httpBasic(Customizer.withDefaults())
+                // Sin cabecera "WWW-Authenticate" en el 401, el navegador no abre su
+                // ventana nativa de login (pensada para paginas tradicionales con
+                // navegacion completa, no para una SPA). Esto no afecta a que el
+                // login siga funcionando: el frontend sigue pudiendo autenticarse
+                // enviando el header Authorization explicitamente (ver login() en
+                // el frontend); esa cabecera solo controlaba el aviso visual del navegador
+                .httpBasic(basic -> basic.authenticationEntryPoint((request, response, authException) ->
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .invalidateHttpSession(true)
