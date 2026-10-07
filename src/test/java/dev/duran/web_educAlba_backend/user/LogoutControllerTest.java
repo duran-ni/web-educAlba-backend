@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
+import dev.duran.web_educAlba_backend.academy.EducationalStage;
 import tools.jackson.databind.ObjectMapper;
 
 @Import(TestcontainersConfiguration.class)
@@ -44,7 +45,8 @@ class LogoutControllerTest {
 
         // Registramos un usuario real una sola vez; si ya existe de un test anterior, se ignora el 409
         String encodedPassword = Base64.getEncoder().encodeToString(PLAIN_PASSWORD.getBytes());
-        RegisterRequest request = new RegisterRequest(EMAIL, encodedPassword);
+        RegisterRequest request = new RegisterRequest("Lucía", "García López", EMAIL, encodedPassword,
+        "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
