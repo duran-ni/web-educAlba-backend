@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
+import dev.duran.web_educAlba_backend.academy.EducationalStage;
 import tools.jackson.databind.ObjectMapper;
 
 @Import(TestcontainersConfiguration.class)
@@ -43,7 +44,9 @@ class RegisterControllerTest {
     @DisplayName("A new user can register successfully")
     void testRegister_ReturnsCreated() throws Exception {
         String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
-        RegisterRequest request = new RegisterRequest("new" + System.currentTimeMillis() + "@educalba.com", encodedPassword);
+        RegisterRequest request = new RegisterRequest("Lucía", "García López",
+                "new" + System.currentTimeMillis() + "@educalba.com", encodedPassword,
+                "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -55,7 +58,8 @@ class RegisterControllerTest {
     @DisplayName("The same email cannot be registered twice")
     void testRegister_DuplicateEmail_ReturnsConflict() throws Exception {
         String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
-        RegisterRequest request = new RegisterRequest("duplicado@educalba.com", encodedPassword);
+        RegisterRequest request = new RegisterRequest("Lucía", "García López", "duplicado@educalba.com",
+                encodedPassword, "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +76,8 @@ class RegisterControllerTest {
     @DisplayName("A password that is too short is rejected")
     void testRegister_PasswordTooShort_ReturnsBadRequest() throws Exception {
         String encodedShortPassword = Base64.getEncoder().encodeToString("abc123".getBytes());
-        RegisterRequest request = new RegisterRequest("corta@educalba.com", encodedShortPassword);
+        RegisterRequest request = new RegisterRequest("Lucía", "García López", "corta@educalba.com",
+                encodedShortPassword, "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
