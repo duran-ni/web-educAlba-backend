@@ -3,6 +3,9 @@ package dev.duran.web_educAlba_backend.user;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.duran.web_educAlba_backend.academy.Student;
+import dev.duran.web_educAlba_backend.academy.StudentRepository;
+import dev.duran.web_educAlba_backend.academy.StudentStatus;
 import dev.duran.web_educAlba_backend.facade.decrypt.IDecryptFacade;
 import dev.duran.web_educAlba_backend.facade.encrypt.IEncryptFacade;
 
@@ -11,13 +14,15 @@ public class RegisterService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final StudentRepository studentRepository;
     private final IDecryptFacade decryptFacade;
     private final IEncryptFacade encryptFacade;
 
-    public RegisterService(UserRepository userRepository, RoleRepository roleRepository, IDecryptFacade decryptFacade,
-            IEncryptFacade encryptFacade) {
+    public RegisterService(UserRepository userRepository, RoleRepository roleRepository,
+            StudentRepository studentRepository, IDecryptFacade decryptFacade, IEncryptFacade encryptFacade) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.studentRepository = studentRepository;
         this.decryptFacade = decryptFacade;
         this.encryptFacade = encryptFacade;
     }
@@ -45,6 +50,17 @@ public class RegisterService {
                 .build();
 
         UserEntity savedUser = userRepository.save(user);
+
+        Student student = Student.builder()
+                .firstName(request.firstName())
+                .lastName(request.lastName())
+                .serviceOfInterest(request.serviceOfInterest())
+                .educationalStage(request.educationalStage())
+                .status(StudentStatus.ACTIVE)
+                .user(savedUser)
+                .build();
+
+        studentRepository.save(student);
 
         return new RegisterResponse(savedUser.getId(), savedUser.getEmail());
     }
