@@ -1,5 +1,6 @@
 package dev.duran.web_educAlba_backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,13 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+
+    // Clave para firmar la cookie "remember-me" (ver application.properties)
+    @Value("${app.remember-me.key}")
+    private String rememberMeKey;
+
+    // Duracion de la cookie "remember-me": 14 dias en segundos
+    private static final int REMEMBER_ME_VALIDITY_SECONDS = 1209600;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +50,12 @@ public class SecurityConfiguration {
                 // el frontend); esa cabecera solo controlaba el aviso visual del navegador
                 .httpBasic(basic -> basic.authenticationEntryPoint((request, response, authException) ->
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
+                // Emite una cookie "remember-me" adicional solo cuando el login incluye
+                // el parametro "remember-me=true" (ver login() en el frontend), para
+                // mantener la sesion activa incluso tras cerrar el navegador
+                .rememberMe(rememberMe -> rememberMe
+                        .key(rememberMeKey)
+                        .tokenValiditySeconds(REMEMBER_ME_VALIDITY_SECONDS))
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .invalidateHttpSession(true)
