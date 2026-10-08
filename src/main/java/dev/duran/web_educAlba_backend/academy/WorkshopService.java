@@ -20,7 +20,8 @@ public class WorkshopService {
     @Transactional(readOnly = true)
     public List<WorkshopResponse> getAll() {
         return workshopRepository.findAll().stream()
-                .sorted(Comparator.comparing(Workshop::getDate).thenComparing(Workshop::getTime))
+                .sorted(Comparator.comparing(Workshop::getDate)
+                        .thenComparing(Workshop::getTime, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(this::toResponse)
                 .toList();
     }
