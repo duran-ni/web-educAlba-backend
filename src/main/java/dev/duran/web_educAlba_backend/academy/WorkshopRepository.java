@@ -13,4 +13,7 @@ public interface WorkshopRepository extends JpaRepository<Workshop, Long> {
 
     // Proximo taller destacado en Inicio: el mas cercano en el futuro
     Optional<Workshop> findFirstByActiveTrueAndDateAfterOrderByDateAsc(LocalDate date);
+
+    // Numero de talleres activos, para el indicador del Dashboard Administrador
+    long countByActiveTrue();
 }
