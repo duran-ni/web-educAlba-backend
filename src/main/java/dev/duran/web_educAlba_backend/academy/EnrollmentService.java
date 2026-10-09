@@ -12,12 +12,14 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final WorkshopRepository workshopRepository;
+    private final DashboardEventsService dashboardEventsService;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository, StudentRepository studentRepository,
-            WorkshopRepository workshopRepository) {
+            WorkshopRepository workshopRepository, DashboardEventsService dashboardEventsService) {
         this.enrollmentRepository = enrollmentRepository;
         this.studentRepository = studentRepository;
         this.workshopRepository = workshopRepository;
+        this.dashboardEventsService = dashboardEventsService;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +48,7 @@ public class EnrollmentService {
             .build();
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        dashboardEventsService.notifyChange();
         return toResponse(savedEnrollment);
     }
 
@@ -68,6 +71,7 @@ public class EnrollmentService {
     public void delete(Long id) {
         Enrollment enrollment = findEnrollmentOrThrow(id);
         enrollmentRepository.delete(enrollment);
+        dashboardEventsService.notifyChange();
     }
 
     @Transactional
@@ -81,7 +85,7 @@ public class EnrollmentService {
 
         Student savedStudent = studentRepository.save(student);
 
-        return request.workshopIds().stream()
+        List<EnrollmentResponse> responses = request.workshopIds().stream()
             .map(workshopId -> {
                 Workshop workshop = findWorkshopOrThrow(workshopId);
 
@@ -94,6 +98,9 @@ public class EnrollmentService {
                 return toResponse(enrollmentRepository.save(enrollment));
             })
             .toList();
+
+        dashboardEventsService.notifyChange();
+        return responses;
     }
 
     private Enrollment findEnrollmentOrThrow(Long id) {
