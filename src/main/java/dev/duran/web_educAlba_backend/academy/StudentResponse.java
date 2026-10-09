@@ -6,6 +6,8 @@ public record StudentResponse(
     String firstName,
     String lastName,
     String serviceOfInterest,
+    Integer age,
+    String phone,
     EducationalStage educationalStage,
     StudentStatus status
 ) {
