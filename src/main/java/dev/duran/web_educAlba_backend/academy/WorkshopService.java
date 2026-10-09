@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,7 +68,12 @@ public class WorkshopService {
     @Transactional
     public void delete(Long id) {
         Workshop workshop = findWorkshopOrThrow(id);
-        workshopRepository.delete(workshop);
+        try {
+            workshopRepository.delete(workshop);
+            workshopRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new WorkshopHasEnrollmentsException(id);
+        }
     }
 
     private Workshop findWorkshopOrThrow(Long id) {
