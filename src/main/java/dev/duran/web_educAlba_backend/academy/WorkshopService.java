@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class WorkshopService {
 
     private final WorkshopRepository workshopRepository;
+    private final DashboardEventsService dashboardEventsService;
 
-    public WorkshopService(WorkshopRepository workshopRepository) {
+    public WorkshopService(WorkshopRepository workshopRepository, DashboardEventsService dashboardEventsService) {
         this.workshopRepository = workshopRepository;
+        this.dashboardEventsService = dashboardEventsService;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +48,7 @@ public class WorkshopService {
                 .build();
 
         Workshop savedWorkshop = workshopRepository.save(workshop);
+        dashboardEventsService.notifyChange();
         return toResponse(savedWorkshop);
     }
 
@@ -74,6 +77,7 @@ public class WorkshopService {
         } catch (DataIntegrityViolationException ex) {
             throw new WorkshopHasEnrollmentsException(id);
         }
+        dashboardEventsService.notifyChange();
     }
 
     private Workshop findWorkshopOrThrow(Long id) {
