@@ -17,8 +17,8 @@ public class StudentService {
     @Transactional(readOnly = true)
     public List<StudentResponse> getAll() {
         return studentRepository.findAll().stream()
-            .map(this::toResponse)
-            .toList();
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -30,11 +30,11 @@ public class StudentService {
     @Transactional
     public StudentResponse create(StudentRequest request) {
         Student student = Student.builder()
-            .firstName(request.firstName())
-            .lastName(request.lastName())
-            .serviceOfInterest(request.serviceOfInterest())
-            .educationalStage(request.educationalStage())
-            .build();
+                .firstName(request.firstName())
+                .lastName(request.lastName())
+                .serviceOfInterest(request.serviceOfInterest())
+                .educationalStage(request.educationalStage())
+                .build();
 
         Student savedStudent = studentRepository.save(student);
         return toResponse(savedStudent);
@@ -61,16 +61,18 @@ public class StudentService {
 
     private Student findStudentOrThrow(Long id) {
         return studentRepository.findById(id)
-            .orElseThrow(() -> new StudentNotFoundException(id));
+                .orElseThrow(() -> new StudentNotFoundException(id));
     }
 
     private StudentResponse toResponse(Student student) {
         return new StudentResponse(
-            student.getId(),
-            student.getFirstName(),
-            student.getLastName(),
-            student.getServiceOfInterest(),
-            student.getEducationalStage(),
-            student.getStatus());
+                student.getId(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getServiceOfInterest(),
+                student.getAge(),
+                student.getPhone(),
+                student.getEducationalStage(),
+                student.getStatus());
     }
 }
