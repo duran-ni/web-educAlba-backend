@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import dev.duran.web_educAlba_backend.user.SecurityUser;
+import dev.duran.web_educAlba_backend.user.auth.SecurityUser;
 import jakarta.validation.Valid;
 
 @RestController
