@@ -1,4 +1,6 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.enrollment;
+
+import dev.duran.web_educAlba_backend.academy.DashboardEventsService;
 
 import dev.duran.web_educAlba_backend.academy.workshop.Workshop;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopNotFoundException;

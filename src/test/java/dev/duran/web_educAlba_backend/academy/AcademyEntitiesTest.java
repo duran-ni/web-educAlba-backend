@@ -2,6 +2,7 @@ package dev.duran.web_educAlba_backend.academy;
 
 import dev.duran.web_educAlba_backend.academy.student.EducationalStage;
 import dev.duran.web_educAlba_backend.academy.student.Note;
+import dev.duran.web_educAlba_backend.academy.enrollment.Enrollment;
 import dev.duran.web_educAlba_backend.academy.student.Student;
 import dev.duran.web_educAlba_backend.academy.student.StudentStatus;
 import dev.duran.web_educAlba_backend.academy.workshop.Workshop;

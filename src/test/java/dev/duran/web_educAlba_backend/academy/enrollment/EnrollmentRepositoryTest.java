@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.enrollment;
 
 import dev.duran.web_educAlba_backend.academy.student.Student;
 import dev.duran.web_educAlba_backend.academy.workshop.Workshop;

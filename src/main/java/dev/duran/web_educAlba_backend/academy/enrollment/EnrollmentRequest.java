@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.enrollment;
 
 import java.time.LocalDate;
 
