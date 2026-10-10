@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.user;
 
+import dev.duran.web_educAlba_backend.user.register.RegisterRequest;
+
 import dev.duran.web_educAlba_backend.user.core.UserEntity;
 import dev.duran.web_educAlba_backend.user.core.UserRepository;
 

@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.user;
+package dev.duran.web_educAlba_backend.user.register;
 
 import dev.duran.web_educAlba_backend.user.core.RoleEntity;
 import dev.duran.web_educAlba_backend.user.core.RoleNames;

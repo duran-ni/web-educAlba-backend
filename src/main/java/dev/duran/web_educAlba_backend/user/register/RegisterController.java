@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.user;
+package dev.duran.web_educAlba_backend.user.register;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
