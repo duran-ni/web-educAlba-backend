@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.dashboard;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

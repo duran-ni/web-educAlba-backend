@@ -1,6 +1,6 @@
 package dev.duran.web_educAlba_backend.academy.workshop;
 
-import dev.duran.web_educAlba_backend.academy.DashboardEventsService;
+import dev.duran.web_educAlba_backend.academy.dashboard.DashboardEventsService;
 
 import java.time.LocalDate;
 import java.util.Comparator;

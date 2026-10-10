@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.dashboard;
 
 import java.util.ArrayList;
 import java.util.List;
