@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.user;
+package dev.duran.web_educAlba_backend.user.passwordreset;
 
 import dev.duran.web_educAlba_backend.user.register.InvalidPasswordException;
 
