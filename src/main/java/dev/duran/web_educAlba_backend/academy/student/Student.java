@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.student;
 
 import dev.duran.web_educAlba_backend.user.UserEntity;
 import jakarta.persistence.Entity;

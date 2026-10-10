@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import dev.duran.web_educAlba_backend.academy.student.Student;
+
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;

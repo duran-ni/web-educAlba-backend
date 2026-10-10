@@ -1,6 +1,6 @@
 package dev.duran.web_educAlba_backend.user;
 
-import dev.duran.web_educAlba_backend.academy.EducationalStage;
+import dev.duran.web_educAlba_backend.academy.student.EducationalStage;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

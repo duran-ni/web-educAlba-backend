@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
-import dev.duran.web_educAlba_backend.academy.EducationalStage;
+import dev.duran.web_educAlba_backend.academy.student.EducationalStage;
 import tools.jackson.databind.ObjectMapper;
 
 @Import(TestcontainersConfiguration.class)

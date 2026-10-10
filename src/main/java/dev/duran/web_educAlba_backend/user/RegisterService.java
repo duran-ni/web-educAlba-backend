@@ -3,9 +3,9 @@ package dev.duran.web_educAlba_backend.user;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import dev.duran.web_educAlba_backend.academy.Student;
-import dev.duran.web_educAlba_backend.academy.StudentRepository;
-import dev.duran.web_educAlba_backend.academy.StudentStatus;
+import dev.duran.web_educAlba_backend.academy.student.Student;
+import dev.duran.web_educAlba_backend.academy.student.StudentRepository;
+import dev.duran.web_educAlba_backend.academy.student.StudentStatus;
 import dev.duran.web_educAlba_backend.facade.decrypt.IDecryptFacade;
 import dev.duran.web_educAlba_backend.facade.encrypt.IEncryptFacade;
 

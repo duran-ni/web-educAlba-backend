@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.student;
 
 // Datos de salida al consultar un material
 public record MaterialResponse(

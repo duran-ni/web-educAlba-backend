@@ -1,5 +1,9 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import dev.duran.web_educAlba_backend.academy.student.EducationalStage;
+import dev.duran.web_educAlba_backend.academy.student.StudentRequest;
+import dev.duran.web_educAlba_backend.academy.student.StudentResponse;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

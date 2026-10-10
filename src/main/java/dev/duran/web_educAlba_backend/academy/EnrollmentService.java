@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import dev.duran.web_educAlba_backend.academy.student.Student;
+import dev.duran.web_educAlba_backend.academy.student.StudentNotFoundException;
+import dev.duran.web_educAlba_backend.academy.student.StudentRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
