@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.communication;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
