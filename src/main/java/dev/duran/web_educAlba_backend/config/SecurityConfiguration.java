@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-import dev.duran.web_educAlba_backend.user.RoleNames;
+import dev.duran.web_educAlba_backend.user.core.RoleNames;
 import jakarta.servlet.http.HttpServletResponse;
 
 // Esquema de autenticacion Basic Auth con sesion por cookies

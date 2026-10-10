@@ -1,5 +1,8 @@
 package dev.duran.web_educAlba_backend.user;
 
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserRepository;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

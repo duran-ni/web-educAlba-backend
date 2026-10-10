@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.user;
 
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 

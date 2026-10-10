@@ -13,7 +13,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
 
 import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
-import dev.duran.web_educAlba_backend.user.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
 
 @DataJpaTest
 @Import(TestcontainersConfiguration.class)

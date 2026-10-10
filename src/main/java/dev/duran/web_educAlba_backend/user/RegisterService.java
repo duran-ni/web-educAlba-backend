@@ -1,5 +1,11 @@
 package dev.duran.web_educAlba_backend.user;
 
+import dev.duran.web_educAlba_backend.user.core.RoleEntity;
+import dev.duran.web_educAlba_backend.user.core.RoleNames;
+import dev.duran.web_educAlba_backend.user.core.RoleRepository;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

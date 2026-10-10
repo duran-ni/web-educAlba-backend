@@ -2,7 +2,7 @@ package dev.duran.web_educAlba_backend.academy.student;
 
 import java.time.LocalDate;
 
-import dev.duran.web_educAlba_backend.user.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

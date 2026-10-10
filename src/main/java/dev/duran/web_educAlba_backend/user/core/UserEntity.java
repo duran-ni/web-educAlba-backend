@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.user;
+package dev.duran.web_educAlba_backend.user.core;
 
 import java.util.HashSet;
 import java.util.Set;

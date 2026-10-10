@@ -1,6 +1,6 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
-import dev.duran.web_educAlba_backend.user.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

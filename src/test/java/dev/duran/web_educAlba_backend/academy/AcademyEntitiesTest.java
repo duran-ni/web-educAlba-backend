@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
-import dev.duran.web_educAlba_backend.user.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
 
 class AcademyEntitiesTest {
 

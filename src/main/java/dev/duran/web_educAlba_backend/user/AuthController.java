@@ -1,5 +1,9 @@
 package dev.duran.web_educAlba_backend.user;
 
+import dev.duran.web_educAlba_backend.user.core.RoleEntity;
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
+import dev.duran.web_educAlba_backend.user.core.UserSummaryResponse;
+
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
