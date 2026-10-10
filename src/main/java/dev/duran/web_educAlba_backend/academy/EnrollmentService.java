@@ -1,5 +1,9 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import dev.duran.web_educAlba_backend.academy.workshop.Workshop;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopNotFoundException;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRepository;
+
 import java.time.LocalDate;
 import java.util.List;
 

@@ -1,5 +1,8 @@
 package dev.duran.web_educAlba_backend.academy;
 
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

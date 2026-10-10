@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy;
 
 import dev.duran.web_educAlba_backend.academy.student.Student;
+import dev.duran.web_educAlba_backend.academy.workshop.Workshop;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

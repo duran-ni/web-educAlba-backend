@@ -1,4 +1,4 @@
-package dev.duran.web_educAlba_backend.academy;
+package dev.duran.web_educAlba_backend.academy.workshop;
 
 import java.time.LocalDate;
 import java.util.List;
