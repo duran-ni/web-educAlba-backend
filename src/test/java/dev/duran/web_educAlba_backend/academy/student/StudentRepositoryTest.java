@@ -1,5 +1,8 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import dev.duran.web_educAlba_backend.user.core.UserEntity;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -37,5 +40,25 @@ class StudentRepositoryTest {
 
         // El listado de "ultimos alumnos" debe mostrar primero el mas reciente
         assertThat(result).containsExactly(active2, active1);
+    }
+
+    @Test
+    void findsStudentByLinkedUserId() {
+        UserEntity user = UserEntity.builder().email("family@educalba.com").password("hashed-password").build();
+        entityManager.persistAndFlush(user);
+
+        Student student = Student.builder().firstName("Lucía").lastName("García").user(user).build();
+        entityManager.persistAndFlush(student);
+
+        Optional<Student> result = studentRepository.findByUser_Id(user.getId());
+
+        assertThat(result).contains(student);
+    }
+
+    @Test
+    void returnsEmptyWhenNoStudentIsLinkedToThatUser() {
+        Optional<Student> result = studentRepository.findByUser_Id(999L);
+
+        assertThat(result).isEmpty();
     }
 }
