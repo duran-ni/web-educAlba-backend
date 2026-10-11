@@ -34,6 +34,7 @@ public class StudentService {
                 .lastName(request.lastName())
                 .serviceOfInterest(request.serviceOfInterest())
                 .educationalStage(request.educationalStage())
+                .status(StudentStatus.ACTIVE)
                 .build();
 
         Student savedStudent = studentRepository.save(student);
