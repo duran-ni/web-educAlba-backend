@@ -2,6 +2,7 @@ package dev.duran.web_educAlba_backend.academy.student;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +58,12 @@ public class StudentService {
     @Transactional
     public void delete(Long id) {
         Student student = findStudentOrThrow(id);
-        studentRepository.delete(student);
+        try {
+            studentRepository.delete(student);
+            studentRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new StudentHasEnrollmentsException(id);
+        }
     }
 
     private Student findStudentOrThrow(Long id) {
