@@ -37,153 +37,153 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PasswordResetControllerTest {
 
-    @Autowired
-    WebApplicationContext context;
+        @Autowired
+        WebApplicationContext context;
 
-    @Autowired
-    ObjectMapper mapper;
+        @Autowired
+        ObjectMapper mapper;
 
-    @Autowired
-    UserRepository userRepository;
+        @Autowired
+        UserRepository userRepository;
 
-    @Autowired
-    PasswordResetTokenRepository passwordResetTokenRepository;
+        @Autowired
+        PasswordResetTokenRepository passwordResetTokenRepository;
 
-    // Sustituye al JavaMailSender real por un doble de prueba, para no enviar
-    // emails de verdad al ejecutar los tests
-    @MockitoBean
-    JavaMailSender javaMailSender;
+        // Sustituye al JavaMailSender real por un doble de prueba, para no enviar
+        // emails de verdad al ejecutar los tests
+        @MockitoBean
+        JavaMailSender javaMailSender;
 
-    MockMvc mockMvc;
+        MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(SecurityMockMvcConfigurers.springSecurity())
-                .build();
-    }
+        @BeforeEach
+        void setUp() {
+                mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                                .apply(SecurityMockMvcConfigurers.springSecurity())
+                                .build();
+        }
 
-    // Registra un usuario de prueba a traves del endpoint real de registro,
-    // para no depender de como esta construida la entidad por dentro
-    private String registerTestUser(String email) throws Exception {
-        String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
-        RegisterRequest request = new RegisterRequest("Lucía", "García López", email, encodedPassword,
-                "Clases de Refuerzo", EducationalStage.PRIMARIA);
+        // Registra un usuario de prueba a traves del endpoint real de registro,
+        // para no depender de como esta construida la entidad por dentro
+        private String registerTestUser(String email) throws Exception {
+                String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
+                RegisterRequest request = new RegisterRequest("Lucía", "García López", email, encodedPassword,
+                                "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                mockMvc.perform(post("/api/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated());
 
-        return email;
-    }
+                return email;
+        }
 
-    @Test
-    @DisplayName("Requesting a reset for a registered email sends an email and returns no content")
-    void testForgotPassword_RegisteredEmail_ReturnsNoContent() throws Exception {
-        String email = registerTestUser("recuperar" + System.currentTimeMillis() + "@educalba.com");
-        ForgotPasswordRequest request = new ForgotPasswordRequest(email);
+        @Test
+        @DisplayName("Requesting a reset for a registered email sends an email and returns no content")
+        void testForgotPassword_RegisteredEmail_ReturnsNoContent() throws Exception {
+                String email = registerTestUser("recuperar" + System.currentTimeMillis() + "@educalba.com");
+                ForgotPasswordRequest request = new ForgotPasswordRequest(email);
 
-        mockMvc.perform(post("/api/auth/forgot-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                mockMvc.perform(post("/api/auth/forgot-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isNoContent());
 
-        verify(javaMailSender).send((SimpleMailMessage) org.mockito.ArgumentMatchers.any());
-    }
+                verify(javaMailSender).send((SimpleMailMessage) org.mockito.ArgumentMatchers.any());
+        }
 
-    @Test
-    @DisplayName("Requesting a reset for an unregistered email also returns no content, without sending an email")
-    void testForgotPassword_UnregisteredEmail_ReturnsNoContentWithoutSendingEmail() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest("noexiste@educalba.com");
+        @Test
+        @DisplayName("Requesting a reset for an unregistered email also returns no content, without sending an email")
+        void testForgotPassword_UnregisteredEmail_ReturnsNoContentWithoutSendingEmail() throws Exception {
+                ForgotPasswordRequest request = new ForgotPasswordRequest("noexiste@educalba.com");
 
-        mockMvc.perform(post("/api/auth/forgot-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                mockMvc.perform(post("/api/auth/forgot-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isNoContent());
 
-        verifyNoInteractions(javaMailSender);
-    }
+                verifyNoInteractions(javaMailSender);
+        }
 
-    @Test
-    @DisplayName("Resetting the password with a valid token succeeds and consumes the token")
-    void testResetPassword_ValidToken_ReturnsNoContent() throws Exception {
-        String email = registerTestUser("token-valido" + System.currentTimeMillis() + "@educalba.com");
+        @Test
+        @DisplayName("Resetting the password with a valid token succeeds and consumes the token")
+        void testResetPassword_ValidToken_ReturnsNoContent() throws Exception {
+                String email = registerTestUser("token-valido" + System.currentTimeMillis() + "@educalba.com");
 
-        mockMvc.perform(post("/api/auth/forgot-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
-                .andExpect(status().isNoContent());
+                mockMvc.perform(post("/api/auth/forgot-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
+                                .andExpect(status().isNoContent());
 
-        UserEntity user = userRepository.findByEmail(email).orElseThrow();
-        PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
+                UserEntity user = userRepository.findByEmail(email).orElseThrow();
+                PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
 
-        String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
-        ResetPasswordRequest request = new ResetPasswordRequest(token.getToken(), encodedNewPassword);
+                String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
+                ResetPasswordRequest request = new ResetPasswordRequest(token.getToken(), encodedNewPassword);
 
-        mockMvc.perform(post("/api/auth/reset-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                mockMvc.perform(post("/api/auth/reset-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isNoContent());
 
-        assertThat(passwordResetTokenRepository.findByToken(token.getToken())).isEmpty();
-    }
+                assertThat(passwordResetTokenRepository.findByToken(token.getToken())).isEmpty();
+        }
 
-    @Test
-    @DisplayName("Resetting the password with a non-existent token is rejected")
-    void testResetPassword_InvalidToken_ReturnsBadRequest() throws Exception {
-        String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
-        ResetPasswordRequest request = new ResetPasswordRequest("token-inventado", encodedNewPassword);
+        @Test
+        @DisplayName("Resetting the password with a non-existent token is rejected")
+        void testResetPassword_InvalidToken_ReturnsBadRequest() throws Exception {
+                String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
+                ResetPasswordRequest request = new ResetPasswordRequest("token-inventado", encodedNewPassword);
 
-        mockMvc.perform(post("/api/auth/reset-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
+                mockMvc.perform(post("/api/auth/reset-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Resetting the password with a new password that is too short is rejected")
-    void testResetPassword_PasswordTooShort_ReturnsBadRequest() throws Exception {
-        String email = registerTestUser("clave-corta" + System.currentTimeMillis() + "@educalba.com");
+        @Test
+        @DisplayName("Resetting the password with a new password that is too short is rejected")
+        void testResetPassword_PasswordTooShort_ReturnsBadRequest() throws Exception {
+                String email = registerTestUser("clave-corta" + System.currentTimeMillis() + "@educalba.com");
 
-        mockMvc.perform(post("/api/auth/forgot-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
-                .andExpect(status().isNoContent());
+                mockMvc.perform(post("/api/auth/forgot-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
+                                .andExpect(status().isNoContent());
 
-        UserEntity user = userRepository.findByEmail(email).orElseThrow();
-        PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
+                UserEntity user = userRepository.findByEmail(email).orElseThrow();
+                PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
 
-        String encodedShortPassword = Base64.getEncoder().encodeToString("abc123".getBytes());
-        ResetPasswordRequest request = new ResetPasswordRequest(token.getToken(), encodedShortPassword);
+                String encodedShortPassword = Base64.getEncoder().encodeToString("abc123".getBytes());
+                ResetPasswordRequest request = new ResetPasswordRequest(token.getToken(), encodedShortPassword);
 
-        mockMvc.perform(post("/api/auth/reset-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
+                mockMvc.perform(post("/api/auth/reset-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Resetting the password with an expired token is rejected and the token is removed")
-    void testResetPassword_ExpiredToken_ReturnsBadRequest() throws Exception {
-        String email = registerTestUser("token-caducado" + System.currentTimeMillis() + "@educalba.com");
-        UserEntity user = userRepository.findByEmail(email).orElseThrow();
+        @Test
+        @DisplayName("Resetting the password with an expired token is rejected and the token is removed")
+        void testResetPassword_ExpiredToken_ReturnsBadRequest() throws Exception {
+                String email = registerTestUser("token-caducado" + System.currentTimeMillis() + "@educalba.com");
+                UserEntity user = userRepository.findByEmail(email).orElseThrow();
 
-        PasswordResetToken expiredToken = PasswordResetToken.builder()
-                .token("token-ya-caducado-" + System.currentTimeMillis())
-                .user(user)
-                .expiresAt(LocalDateTime.now().minusHours(2))
-                .build();
-        passwordResetTokenRepository.save(expiredToken);
+                PasswordResetToken expiredToken = PasswordResetToken.builder()
+                                .token("token-ya-caducado-" + System.currentTimeMillis())
+                                .user(user)
+                                .expiresAt(LocalDateTime.now().minusHours(2))
+                                .build();
+                passwordResetTokenRepository.save(expiredToken);
 
-        String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
-        ResetPasswordRequest request = new ResetPasswordRequest(expiredToken.getToken(), encodedNewPassword);
+                String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
+                ResetPasswordRequest request = new ResetPasswordRequest(expiredToken.getToken(), encodedNewPassword);
 
-        mockMvc.perform(post("/api/auth/reset-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                mockMvc.perform(post("/api/auth/reset-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest());
 
-        assertThat(passwordResetTokenRepository.findByToken(expiredToken.getToken())).isEmpty();
-    }
+                assertThat(passwordResetTokenRepository.findByToken(expiredToken.getToken())).isEmpty();
+        }
 }
