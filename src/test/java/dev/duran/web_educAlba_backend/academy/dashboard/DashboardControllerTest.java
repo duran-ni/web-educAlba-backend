@@ -5,6 +5,7 @@ import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,8 +48,8 @@ class DashboardControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     @Test
@@ -77,10 +78,10 @@ class DashboardControllerTest {
     private DashboardSummaryResponse fetchSummary() throws Exception {
         String body = mockMvc.perform(get("/api/admin/dashboard/summary")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, DashboardSummaryResponse.class);
     }
@@ -93,10 +94,10 @@ class DashboardControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, WorkshopResponse.class).id();
     }
@@ -107,6 +108,14 @@ class DashboardControllerTest {
         mockMvc.perform(post("/api/public/enrollments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("The summary stream endpoint opens an asynchronous SSE connection")
+    void testStreamSummary_StartsAsyncConnection() throws Exception {
+        mockMvc.perform(get("/api/admin/dashboard/summary/stream")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(request().asyncStarted());
     }
 }
