@@ -28,6 +28,7 @@ public class PasswordResetService {
     private final IDecryptFacade decryptFacade;
     private final IEncryptFacade encryptFacade;
     private final JavaMailSender javaMailSender;
+    private final PasswordResetTokenCleanupService passwordResetTokenCleanupService;
     private final String fromAddress;
     private final String frontendBaseUrl;
 
@@ -37,6 +38,7 @@ public class PasswordResetService {
             IDecryptFacade decryptFacade,
             IEncryptFacade encryptFacade,
             JavaMailSender javaMailSender,
+            PasswordResetTokenCleanupService passwordResetTokenCleanupService,
             @Value("${app.mail.from-address}") String fromAddress,
             @Value("${app.frontend.base-url}") String frontendBaseUrl) {
         this.userRepository = userRepository;
@@ -44,6 +46,7 @@ public class PasswordResetService {
         this.decryptFacade = decryptFacade;
         this.encryptFacade = encryptFacade;
         this.javaMailSender = javaMailSender;
+        this.passwordResetTokenCleanupService = passwordResetTokenCleanupService;
         this.fromAddress = fromAddress;
         this.frontendBaseUrl = frontendBaseUrl;
     }
@@ -58,13 +61,13 @@ public class PasswordResetService {
             // Invalida cualquier token anterior del mismo usuario: solo el
             // enlace del correo mas reciente debe funcionar
             passwordResetTokenRepository.findByUser(user)
-                .ifPresent(passwordResetTokenRepository::delete);
+                    .ifPresent(passwordResetTokenRepository::delete);
 
             PasswordResetToken passwordResetToken = PasswordResetToken.builder()
-                .token(UUID.randomUUID().toString())
-                .user(user)
-                .expiresAt(LocalDateTime.now().plusHours(TOKEN_VALIDITY_HOURS))
-                .build();
+                    .token(UUID.randomUUID().toString())
+                    .user(user)
+                    .expiresAt(LocalDateTime.now().plusHours(TOKEN_VALIDITY_HOURS))
+                    .build();
 
             passwordResetTokenRepository.save(passwordResetToken);
             sendResetEmail(user, passwordResetToken.getToken());
@@ -74,10 +77,11 @@ public class PasswordResetService {
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(request.token())
-            .orElseThrow(() -> new InvalidPasswordResetTokenException("El enlace de restablecimiento no es válido"));
+                .orElseThrow(
+                        () -> new InvalidPasswordResetTokenException("El enlace de restablecimiento no es válido"));
 
         if (passwordResetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            passwordResetTokenRepository.delete(passwordResetToken);
+            passwordResetTokenCleanupService.deleteExpiredToken(passwordResetToken);
             throw new InvalidPasswordResetTokenException("El enlace de restablecimiento ha caducado");
         }
 
@@ -104,10 +108,10 @@ public class PasswordResetService {
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Restablece tu contraseña de EducAlba");
         mailMessage.setText(
-            "Hemos recibido una solicitud para restablecer tu contraseña.\n\n"
-                + "Pulsa este enlace para crear una nueva contraseña (válido durante 1 hora):\n"
-                + resetLink + "\n\n"
-                + "Si no has solicitado este cambio, puedes ignorar este correo.");
+                "Hemos recibido una solicitud para restablecer tu contraseña.\n\n"
+                        + "Pulsa este enlace para crear una nueva contraseña (válido durante 1 hora):\n"
+                        + resetLink + "\n\n"
+                        + "Si no has solicitado este cambio, puedes ignorar este correo.");
 
         javaMailSender.send(mailMessage);
     }
