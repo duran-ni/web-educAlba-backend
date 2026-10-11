@@ -43,30 +43,38 @@ class AuthControllerSecurityTest {
     @BeforeEach
     void setUp() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
 
-        // Registramos un usuario real una sola vez; si ya existe de un test anterior, se ignora el 409
+        // Registramos un usuario real una sola vez; si ya existe de un test anterior,
+        // se ignora el 409
         String encodedPassword = Base64.getEncoder().encodeToString(PLAIN_PASSWORD.getBytes());
         RegisterRequest request = new RegisterRequest("Lucía", "García López", EMAIL, encodedPassword,
-        "Clases de Refuerzo", EducationalStage.PRIMARIA);
+                "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)));
     }
 
     @Test
     @DisplayName("An anonymous user cannot access /api/auth/me")
     void testMe_AnonymousUser_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("An authenticated user can access /api/auth/me")
     void testMe_AuthenticatedUser_ReturnsOk() throws Exception {
         mockMvc.perform(get("/api/auth/me").with(httpBasic(EMAIL, PLAIN_PASSWORD)))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Authentication with an email that is not registered returns unauthorized")
+    void testMe_UnknownEmail_ReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/auth/me").with(httpBasic("no-registrado@educalba.com", "CualquierClave123")))
+                .andExpect(status().isUnauthorized());
     }
 }
