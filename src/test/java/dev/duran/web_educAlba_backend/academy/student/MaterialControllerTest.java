@@ -41,8 +41,8 @@ class MaterialControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     private Long createStudent() throws Exception {
@@ -52,10 +52,10 @@ class MaterialControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, StudentResponse.class).id();
     }
@@ -64,85 +64,126 @@ class MaterialControllerTest {
     @DisplayName("A new material can be created")
     void testCreate_ReturnsCreated() throws Exception {
         Long studentId = createStudent();
-        MaterialRequest request = new MaterialRequest("Worksheet 1", "Mathematics", 1024L, "/materials/worksheet1.pdf", studentId);
+        MaterialRequest request = new MaterialRequest("Worksheet 1", "Mathematics", 1024L, "/materials/worksheet1.pdf",
+                studentId);
 
         mockMvc.perform(post("/api/admin/materials")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.name").value("Worksheet 1"))
-            .andExpect(jsonPath("$.studentFullName").value("Carlos Diaz"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Worksheet 1"))
+                .andExpect(jsonPath("$.studentFullName").value("Carlos Diaz"));
     }
 
     @Test
     @DisplayName("All materials can be listed")
     void testGetAll_ReturnsOk() throws Exception {
         Long studentId = createStudent();
-        MaterialRequest request = new MaterialRequest("Reading guide", "Language", 512L, "/materials/reading-guide.pdf", studentId);
+        MaterialRequest request = new MaterialRequest("Reading guide", "Language", 512L, "/materials/reading-guide.pdf",
+                studentId);
 
         mockMvc.perform(post("/api/admin/materials")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/materials")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("An existing material can be retrieved by id")
+    void testGetById_ReturnsOk() throws Exception {
+        Long studentId = createStudent();
+        MaterialRequest createRequest = new MaterialRequest("Material to retrieve", "Art", 64L,
+                "/materials/retrieve.pdf", studentId);
+
+        String createBody = mockMvc.perform(post("/api/admin/materials")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        MaterialResponse created = mapper.readValue(createBody, MaterialResponse.class);
+
+        mockMvc.perform(get("/api/admin/materials/" + created.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Material to retrieve"));
+    }
+
+    @Test
+    @DisplayName("Creating a material for a non-existent student is rejected")
+    void testCreate_UnknownStudent_ReturnsNotFound() throws Exception {
+        MaterialRequest request = new MaterialRequest("Orphan material", "Art", 64L, "/materials/orphan.pdf", 999999L);
+
+        mockMvc.perform(post("/api/admin/materials")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("An existing material can be updated")
     void testUpdate_ReturnsOk() throws Exception {
         Long studentId = createStudent();
-        MaterialRequest createRequest = new MaterialRequest("Draft notes", "Science", 256L, "/materials/draft-notes.pdf", studentId);
+        MaterialRequest createRequest = new MaterialRequest("Draft notes", "Science", 256L,
+                "/materials/draft-notes.pdf", studentId);
 
         String createBody = mockMvc.perform(post("/api/admin/materials")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         MaterialResponse created = mapper.readValue(createBody, MaterialResponse.class);
-        MaterialRequest updateRequest = new MaterialRequest("Final notes", "Science", 300L, "/materials/final-notes.pdf", studentId);
+        MaterialRequest updateRequest = new MaterialRequest("Final notes", "Science", 300L,
+                "/materials/final-notes.pdf", studentId);
 
         mockMvc.perform(put("/api/admin/materials/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("Final notes"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Final notes"));
     }
 
     @Test
     @DisplayName("A deleted material can no longer be found")
     void testDelete_ThenGetReturnsNotFound() throws Exception {
         Long studentId = createStudent();
-        MaterialRequest createRequest = new MaterialRequest("Temporary file", "History", 128L, "/materials/temp.pdf", studentId);
+        MaterialRequest createRequest = new MaterialRequest("Temporary file", "History", 128L, "/materials/temp.pdf",
+                studentId);
 
         String createBody = mockMvc.perform(post("/api/admin/materials")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         MaterialResponse created = mapper.readValue(createBody, MaterialResponse.class);
 
         mockMvc.perform(delete("/api/admin/materials/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/admin/materials/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -154,6 +195,6 @@ class MaterialControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 }
