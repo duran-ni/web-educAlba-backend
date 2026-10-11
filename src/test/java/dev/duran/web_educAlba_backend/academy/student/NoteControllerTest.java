@@ -43,8 +43,8 @@ class NoteControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     private Long createStudent() throws Exception {
@@ -54,10 +54,10 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, StudentResponse.class).id();
     }
@@ -66,15 +66,16 @@ class NoteControllerTest {
     @DisplayName("A new note can be created")
     void testCreate_ReturnsCreated() throws Exception {
         Long studentId = createStudent();
-        NoteRequest request = new NoteRequest("Shows great progress in group activities", LocalDate.now(), true, studentId);
+        NoteRequest request = new NoteRequest("Shows great progress in group activities", LocalDate.now(), true,
+                studentId);
 
         mockMvc.perform(post("/api/admin/notes")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.studentFullName").value("Sofia Navarro"))
-            .andExpect(jsonPath("$.authorEmail").value(ADMIN_EMAIL));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.studentFullName").value("Sofia Navarro"))
+                .andExpect(jsonPath("$.authorEmail").value(ADMIN_EMAIL));
     }
 
     @Test
@@ -87,12 +88,47 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/notes")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("An existing note can be retrieved by id")
+    void testGetById_ReturnsOk() throws Exception {
+        Long studentId = createStudent();
+        NoteRequest createRequest = new NoteRequest("Note to retrieve", LocalDate.now(), false, studentId);
+
+        String createBody = mockMvc.perform(post("/api/admin/notes")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        NoteResponse created = mapper.readValue(createBody, NoteResponse.class);
+
+        mockMvc.perform(get("/api/admin/notes/" + created.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Note to retrieve"));
+    }
+
+    @Test
+    @DisplayName("Creating a note for a non-existent student is rejected")
+    void testCreate_UnknownStudent_ReturnsNotFound() throws Exception {
+        NoteRequest request = new NoteRequest("Orphan note", LocalDate.now(), false, 999999L);
+
+        mockMvc.perform(post("/api/admin/notes")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -105,10 +141,10 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         NoteResponse created = mapper.readValue(createBody, NoteResponse.class);
         NoteRequest updateRequest = new NoteRequest("Revised and pinned note", LocalDate.now(), true, studentId);
@@ -117,9 +153,9 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").value("Revised and pinned note"))
-            .andExpect(jsonPath("$.pinned").value(true));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Revised and pinned note"))
+                .andExpect(jsonPath("$.pinned").value(true));
     }
 
     @Test
@@ -132,20 +168,20 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         NoteResponse created = mapper.readValue(createBody, NoteResponse.class);
 
         mockMvc.perform(delete("/api/admin/notes/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/admin/notes/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -157,6 +193,6 @@ class NoteControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 }
