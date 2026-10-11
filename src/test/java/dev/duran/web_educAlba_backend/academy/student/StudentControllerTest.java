@@ -56,7 +56,7 @@ class StudentControllerTest {
                 .content(mapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.firstName").value("Ana"))
-            .andExpect(jsonPath("$.status").value("PENDING"));
+            .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
     @Test
