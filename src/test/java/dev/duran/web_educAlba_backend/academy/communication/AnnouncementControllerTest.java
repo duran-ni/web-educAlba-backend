@@ -43,89 +43,117 @@ class AnnouncementControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     @Test
     @DisplayName("A new announcement can be created")
     void testCreate_ReturnsCreated() throws Exception {
-        AnnouncementRequest request = new AnnouncementRequest("Autumn break schedule", "The center will be closed from Oct 12 to Oct 16", LocalDate.now());
+        AnnouncementRequest request = new AnnouncementRequest("Autumn break schedule",
+                "The center will be closed from Oct 12 to Oct 16", LocalDate.now());
 
         mockMvc.perform(post("/api/admin/announcements")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.title").value("Autumn break schedule"))
-            .andExpect(jsonPath("$.authorEmail").value(ADMIN_EMAIL));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Autumn break schedule"))
+                .andExpect(jsonPath("$.authorEmail").value(ADMIN_EMAIL));
     }
 
     @Test
     @DisplayName("All announcements can be listed")
     void testGetAll_ReturnsOk() throws Exception {
-        AnnouncementRequest request = new AnnouncementRequest("New workshop schedule", "Updated timetable for next term", LocalDate.now());
+        AnnouncementRequest request = new AnnouncementRequest("New workshop schedule",
+                "Updated timetable for next term", LocalDate.now());
 
         mockMvc.perform(post("/api/admin/announcements")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/announcements")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("An existing announcement can be retrieved by id")
+    void testGetById_ReturnsOk() throws Exception {
+        AnnouncementRequest createRequest = new AnnouncementRequest("Announcement to retrieve", "Content to retrieve",
+                LocalDate.now());
+
+        String createBody = mockMvc.perform(post("/api/admin/announcements")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        AnnouncementResponse created = mapper.readValue(createBody, AnnouncementResponse.class);
+
+        mockMvc.perform(get("/api/admin/announcements/" + created.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Announcement to retrieve"));
     }
 
     @Test
     @DisplayName("An existing announcement can be updated")
     void testUpdate_ReturnsOk() throws Exception {
-        AnnouncementRequest createRequest = new AnnouncementRequest("Draft announcement", "Content pending review", LocalDate.now());
+        AnnouncementRequest createRequest = new AnnouncementRequest("Draft announcement", "Content pending review",
+                LocalDate.now());
 
         String createBody = mockMvc.perform(post("/api/admin/announcements")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         AnnouncementResponse created = mapper.readValue(createBody, AnnouncementResponse.class);
-        AnnouncementRequest updateRequest = new AnnouncementRequest("Published announcement", "Final reviewed content", LocalDate.now());
+        AnnouncementRequest updateRequest = new AnnouncementRequest("Published announcement", "Final reviewed content",
+                LocalDate.now());
 
         mockMvc.perform(put("/api/admin/announcements/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.title").value("Published announcement"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Published announcement"));
     }
 
     @Test
     @DisplayName("A deleted announcement can no longer be found")
     void testDelete_ThenGetReturnsNotFound() throws Exception {
-        AnnouncementRequest createRequest = new AnnouncementRequest("Temporary announcement", "To be removed", LocalDate.now());
+        AnnouncementRequest createRequest = new AnnouncementRequest("Temporary announcement", "To be removed",
+                LocalDate.now());
 
         String createBody = mockMvc.perform(post("/api/admin/announcements")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         AnnouncementResponse created = mapper.readValue(createBody, AnnouncementResponse.class);
 
         mockMvc.perform(delete("/api/admin/announcements/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/admin/announcements/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -137,6 +165,6 @@ class AnnouncementControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 }
