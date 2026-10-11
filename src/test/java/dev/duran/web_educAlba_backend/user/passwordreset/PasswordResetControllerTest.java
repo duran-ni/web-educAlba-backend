@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Base64;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -58,8 +59,8 @@ class PasswordResetControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     // Registra un usuario de prueba a traves del endpoint real de registro,
@@ -72,7 +73,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         return email;
     }
@@ -86,7 +87,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/forgot-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         verify(javaMailSender).send((SimpleMailMessage) org.mockito.ArgumentMatchers.any());
     }
@@ -99,7 +100,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/forgot-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         verifyNoInteractions(javaMailSender);
     }
@@ -112,7 +113,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/forgot-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         UserEntity user = userRepository.findByEmail(email).orElseThrow();
         PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
@@ -123,7 +124,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         assertThat(passwordResetTokenRepository.findByToken(token.getToken())).isEmpty();
     }
@@ -137,7 +138,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -148,7 +149,7 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/forgot-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(new ForgotPasswordRequest(email))))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         UserEntity user = userRepository.findByEmail(email).orElseThrow();
         PasswordResetToken token = passwordResetTokenRepository.findByUser(user).orElseThrow();
@@ -159,6 +160,30 @@ class PasswordResetControllerTest {
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Resetting the password with an expired token is rejected and the token is removed")
+    void testResetPassword_ExpiredToken_ReturnsBadRequest() throws Exception {
+        String email = registerTestUser("token-caducado" + System.currentTimeMillis() + "@educalba.com");
+        UserEntity user = userRepository.findByEmail(email).orElseThrow();
+
+        PasswordResetToken expiredToken = PasswordResetToken.builder()
+                .token("token-ya-caducado-" + System.currentTimeMillis())
+                .user(user)
+                .expiresAt(LocalDateTime.now().minusHours(2))
+                .build();
+        passwordResetTokenRepository.save(expiredToken);
+
+        String encodedNewPassword = Base64.getEncoder().encodeToString("NuevaClave456".getBytes());
+        ResetPasswordRequest request = new ResetPasswordRequest(expiredToken.getToken(), encodedNewPassword);
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(passwordResetTokenRepository.findByToken(expiredToken.getToken())).isEmpty();
     }
 }
