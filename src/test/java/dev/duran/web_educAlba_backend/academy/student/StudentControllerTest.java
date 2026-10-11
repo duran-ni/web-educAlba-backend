@@ -1,5 +1,12 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import dev.duran.web_educAlba_backend.academy.enrollment.EnrollmentRequest;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,8 +48,8 @@ class StudentControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     @Test
@@ -54,9 +61,9 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.firstName").value("Ana"))
-            .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.firstName").value("Ana"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
     @Test
@@ -68,12 +75,12 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/students")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -85,10 +92,10 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         StudentResponse created = mapper.readValue(createBody, StudentResponse.class);
         StudentRequest updateRequest = new StudentRequest("Marta", "Ruiz Gomez", "Talleres", EducationalStage.PRIMARIA);
@@ -97,8 +104,8 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.lastName").value("Ruiz Gomez"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lastName").value("Ruiz Gomez"));
     }
 
     @Test
@@ -110,20 +117,20 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         StudentResponse created = mapper.readValue(createBody, StudentResponse.class);
 
         mockMvc.perform(delete("/api/admin/students/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/admin/students/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -135,6 +142,53 @@ class StudentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("A student with active enrollments cannot be deleted")
+    void testDelete_StudentWithEnrollments_ReturnsConflict() throws Exception {
+        WorkshopRequest workshopRequest = new WorkshopRequest("Chess", "Beginner chess club",
+                LocalDate.now().plusDays(8), LocalTime.of(17, 0), "8-14", "Room H", true);
+
+        String workshopBody = mockMvc.perform(post("/api/admin/workshops")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(workshopRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        WorkshopResponse workshop = mapper.readValue(workshopBody, WorkshopResponse.class);
+
+        StudentRequest createRequest = new StudentRequest("Elena", "Moreno", "Talleres", EducationalStage.ESO);
+
+        String createBody = mockMvc.perform(post("/api/admin/students")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        StudentResponse student = mapper.readValue(createBody, StudentResponse.class);
+
+        EnrollmentRequest enrollmentRequest = new EnrollmentRequest(student.id(), workshop.id(), LocalDate.now(), "");
+
+        mockMvc.perform(post("/api/admin/enrollments")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(enrollmentRequest)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/admin/students/" + student.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/admin/students/" + student.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk());
     }
 }
