@@ -50,8 +50,8 @@ class EnrollmentControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity())
-            .build();
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
     }
 
     private Long createStudent() throws Exception {
@@ -61,25 +61,26 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, StudentResponse.class).id();
     }
 
     private Long createWorkshop() throws Exception {
-        WorkshopRequest request = new WorkshopRequest("Ceramics", "Introduction to ceramics", LocalDate.now().plusDays(7), LocalTime.of(16, 0), "8-12", "Room A", true);
+        WorkshopRequest request = new WorkshopRequest("Ceramics", "Introduction to ceramics",
+                LocalDate.now().plusDays(7), LocalTime.of(16, 0), "8-12", "Room A", true);
 
         String body = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(body, WorkshopResponse.class).id();
     }
@@ -95,9 +96,9 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.studentFullName").value("Elena Torres"))
-            .andExpect(jsonPath("$.workshopName").value("Ceramics"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.studentFullName").value("Elena Torres"))
+                .andExpect(jsonPath("$.workshopName").value("Ceramics"));
     }
 
     @Test
@@ -111,12 +112,49 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/enrollments")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("An existing enrollment can be retrieved by id")
+    void testGetById_ReturnsOk() throws Exception {
+        Long studentId = createStudent();
+        Long workshopId = createWorkshop();
+        EnrollmentRequest createRequest = new EnrollmentRequest(studentId, workshopId, LocalDate.now(), "Just started");
+
+        String createBody = mockMvc.perform(post("/api/admin/enrollments")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        EnrollmentResponse created = mapper.readValue(createBody, EnrollmentResponse.class);
+
+        mockMvc.perform(get("/api/admin/enrollments/" + created.id())
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.progress").value("Just started"));
+    }
+
+    @Test
+    @DisplayName("Creating an enrollment for a non-existent student is rejected")
+    void testCreate_UnknownStudent_ReturnsNotFound() throws Exception {
+        Long workshopId = createWorkshop();
+        EnrollmentRequest request = new EnrollmentRequest(999999L, workshopId, LocalDate.now(), "Just started");
+
+        mockMvc.perform(post("/api/admin/enrollments")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -130,20 +168,21 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         EnrollmentResponse created = mapper.readValue(createBody, EnrollmentResponse.class);
-        EnrollmentRequest updateRequest = new EnrollmentRequest(studentId, workshopId, LocalDate.now(), "Halfway through");
+        EnrollmentRequest updateRequest = new EnrollmentRequest(studentId, workshopId, LocalDate.now(),
+                "Halfway through");
 
         mockMvc.perform(put("/api/admin/enrollments/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.progress").value("Halfway through"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.progress").value("Halfway through"));
     }
 
     @Test
@@ -157,20 +196,20 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(createRequest)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         EnrollmentResponse created = mapper.readValue(createBody, EnrollmentResponse.class);
 
         mockMvc.perform(delete("/api/admin/enrollments/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/admin/enrollments/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -182,6 +221,6 @@ class EnrollmentControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 }
