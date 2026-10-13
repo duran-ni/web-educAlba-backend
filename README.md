@@ -33,10 +33,10 @@ EducAlba es la web de una academia de refuerzo educativo y talleres para niños 
 
 La aplicación distingue dos roles:
 
-| Rol | Quién es | Qué puede hacer |
-|-----|----------|-----------------|
-| `ADMINISTRADOR` | Dirección de la academia | Gestionar talleres, agenda, alumnos, inscripciones, materiales, notas, avisos y galería. Ver el resumen del dashboard en tiempo real. |
-| `ALUMNO_FAMILIA` | Familia que se registra | Consultar su panel con los datos del alumno y los talleres en los que está inscrito. |
+| Rol              | Quién es                 | Qué puede hacer                                                                                                                       |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ADMINISTRADOR`  | Dirección de la academia | Gestionar talleres, agenda, alumnos, inscripciones, materiales, notas, avisos y galería. Ver el resumen del dashboard en tiempo real. |
+| `ALUMNO_FAMILIA` | Familia que se registra  | Consultar su panel con los datos del alumno y los talleres en los que está inscrito.                                                  |
 
 Cualquier visitante sin cuenta puede ver los talleres, la galería, inscribirse a un taller y enviar el formulario de contacto o de interés.
 
@@ -44,25 +44,25 @@ Cualquier visitante sin cuenta puede ver los talleres, la galería, inscribirse 
 
 ## 💻 Tecnologías utilizadas
 
-| Categoría | Tecnología |
-|-----------|-----------|
-| Lenguaje | Java 21 |
-| Framework | Spring Boot 4.1 (Web MVC, Data JPA, Validation, Mail) |
-| Seguridad | Spring Security (HTTP Basic + sesión por cookie + remember-me) |
-| Base de datos | PostgreSQL 17 dockerizada (Docker Compose) |
-| Imágenes | Cloudinary (galería) |
-| Correo | Spring Mail + Mailtrap (sandbox de desarrollo) |
-| Utilidades | Lombok |
-| Testing | JUnit 5, MockMvc, Spring Security Test, Testcontainers |
-| Cobertura | JaCoCo (mínimo exigido 70 %) |
-| Build | Maven (wrapper incluido) |
-| CI | GitHub Actions |
+| Categoría     | Tecnología                                                     |
+| ------------- | -------------------------------------------------------------- |
+| Lenguaje      | Java 21                                                        |
+| Framework     | Spring Boot 4.1 (Web MVC, Data JPA, Validation, Mail)          |
+| Seguridad     | Spring Security (HTTP Basic + sesión por cookie + remember-me) |
+| Base de datos | PostgreSQL 17 dockerizada (Docker Compose)                     |
+| Imágenes      | Cloudinary (galería)                                           |
+| Correo        | Spring Mail + Mailtrap (sandbox de desarrollo)                 |
+| Utilidades    | Lombok                                                         |
+| Testing       | JUnit 5, MockMvc, Spring Security Test, Testcontainers         |
+| Cobertura     | JaCoCo (mínimo exigido 70 %)                                   |
+| Build         | Maven (wrapper incluido)                                       |
+| CI            | GitHub Actions                                                 |
 
 ---
 
 ## 🧱 Arquitectura
 
-El código está organizado **por funcionalidad** (*package by feature*): cada carpeta contiene todo lo de un dominio (entidad, repositorio, servicio, controlador, DTOs y excepciones). Dentro de cada funcionalidad se respeta la arquitectura en capas **Controller → Service → Repository**.
+El código está organizado **por funcionalidad** (_package by feature_): cada carpeta contiene todo lo de un dominio (entidad, repositorio, servicio, controlador, DTOs y excepciones). Dentro de cada funcionalidad se respeta la arquitectura en capas **Controller → Service → Repository**.
 
 ```
 src/main/java/dev/duran/web_educAlba_backend
@@ -135,6 +135,7 @@ docker compose up -d
 **4.** La API queda disponible en `http://localhost:8080/api`.
 
 Al primer arranque se crean automáticamente:
+
 - Los roles `ADMINISTRADOR` y `ALUMNO_FAMILIA` y un usuario administrador inicial (`DataSeeder`).
 - Los talleres de ejemplo de octubre (`data.sql`).
 
@@ -144,15 +145,15 @@ Al primer arranque se crean automáticamente:
 
 ## 🔐 Variables de entorno
 
-| Variable | Obligatoria | Para qué sirve |
-|----------|-------------|----------------|
-| `MAIL_USERNAME` | Para enviar correos | Usuario SMTP de Mailtrap |
-| `MAIL_PASSWORD` | Para enviar correos | Contraseña SMTP de Mailtrap |
-| `CLOUDINARY_CLOUD_NAME` | Para la galería | Nombre de la cuenta de Cloudinary |
-| `CLOUDINARY_API_KEY` | Para la galería | API key de Cloudinary |
-| `CLOUDINARY_API_SECRET` | Para la galería | API secret de Cloudinary |
-| `REMEMBER_ME_KEY` | En producción | Clave para firmar la cookie "recordar sesión" |
-| `FRONTEND_BASE_URL` | No (por defecto `http://localhost:5173`) | URL del frontend para el enlace del email de recuperación |
+| Variable                | Obligatoria                              | Para qué sirve                                            |
+| ----------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `MAIL_USERNAME`         | Para enviar correos                      | Usuario SMTP de Mailtrap                                  |
+| `MAIL_PASSWORD`         | Para enviar correos                      | Contraseña SMTP de Mailtrap                               |
+| `CLOUDINARY_CLOUD_NAME` | Para la galería                          | Nombre de la cuenta de Cloudinary                         |
+| `CLOUDINARY_API_KEY`    | Para la galería                          | API key de Cloudinary                                     |
+| `CLOUDINARY_API_SECRET` | Para la galería                          | API secret de Cloudinary                                  |
+| `REMEMBER_ME_KEY`       | En producción                            | Clave para firmar la cookie "recordar sesión"             |
+| `FRONTEND_BASE_URL`     | No (por defecto `http://localhost:5173`) | URL del frontend para el enlace del email de recuperación |
 
 ---
 
@@ -193,53 +194,53 @@ Las siguientes peticiones viajan solo con la cookie de sesión. Si se añade `?r
 
 ### Autenticación — `/api/auth`
 
-| Método | Ruta | Acceso | Descripción |
-|--------|------|--------|-------------|
-| POST | `/register` | Público | Registro de familia + alumno |
-| GET | `/me` | Autenticado | Login (HTTP Basic) y comprobación de sesión |
-| POST | `/logout` | Autenticado | Cierra la sesión (204) |
-| POST | `/forgot-password` | Público | Envía email con enlace de recuperación |
-| POST | `/reset-password` | Público | Cambia la contraseña con el token recibido |
+| Método | Ruta               | Acceso      | Descripción                                 |
+| ------ | ------------------ | ----------- | ------------------------------------------- |
+| POST   | `/register`        | Público     | Registro de familia + alumno                |
+| GET    | `/me`              | Autenticado | Login (HTTP Basic) y comprobación de sesión |
+| POST   | `/logout`          | Autenticado | Cierra la sesión (204)                      |
+| POST   | `/forgot-password` | Público     | Envía email con enlace de recuperación      |
+| POST   | `/reset-password`  | Público     | Cambia la contraseña con el token recibido  |
 
 ### Público — `/api/public`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/workshops` | Talleres activos |
-| GET | `/workshops/next` | Próximo taller (para la portada) |
-| POST | `/enrollments` | Inscripción a uno o varios talleres desde la web |
-| GET | `/gallery` | Fotos de la galería |
-| POST | `/contact-messages` | Formulario de contacto (envía email a la academia) |
-| POST | `/interest-submissions` | Formulario rápido de interés de la portada |
+| Método | Ruta                    | Descripción                                        |
+| ------ | ----------------------- | -------------------------------------------------- |
+| GET    | `/workshops`            | Talleres activos                                   |
+| GET    | `/workshops/next`       | Próximo taller (para la portada)                   |
+| POST   | `/enrollments`          | Inscripción a uno o varios talleres desde la web   |
+| GET    | `/gallery`              | Fotos de la galería                                |
+| POST   | `/contact-messages`     | Formulario de contacto (envía email a la academia) |
+| POST   | `/interest-submissions` | Formulario rápido de interés de la portada         |
 
 ### Familia — `/api/dashboard` (rol `ALUMNO_FAMILIA`)
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/me` | Datos del alumno de la familia |
-| GET | `/my-workshops` | Talleres en los que está inscrito y su progreso |
+| Método | Ruta            | Descripción                                     |
+| ------ | --------------- | ----------------------------------------------- |
+| GET    | `/me`           | Datos del alumno de la familia                  |
+| GET    | `/my-workshops` | Talleres en los que está inscrito y su progreso |
 
 ### Administración — `/api/admin` (rol `ADMINISTRADOR`)
 
 CRUD completo (`GET` listado, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`) sobre:
 
-| Recurso | Ruta |
-|---------|------|
-| Talleres | `/workshops` |
+| Recurso           | Ruta             |
+| ----------------- | ---------------- |
+| Talleres          | `/workshops`     |
 | Eventos de agenda | `/agenda-events` |
-| Alumnos | `/students` |
-| Inscripciones | `/enrollments` |
-| Materiales | `/materials` |
-| Notas | `/notes` |
-| Avisos | `/announcements` |
+| Alumnos           | `/students`      |
+| Inscripciones     | `/enrollments`   |
+| Materiales        | `/materials`     |
+| Notas             | `/notes`         |
+| Avisos            | `/announcements` |
 
 Además:
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/dashboard/summary` | KPIs: alumnos inscritos y talleres activos |
-| GET | `/dashboard/summary/stream` | Stream SSE: avisa de cambios en el resumen |
-| GET / POST / DELETE | `/gallery` | Listar, subir (multipart) y borrar fotos |
+| Método              | Ruta                        | Descripción                                |
+| ------------------- | --------------------------- | ------------------------------------------ |
+| GET                 | `/dashboard/summary`        | KPIs: alumnos inscritos y talleres activos |
+| GET                 | `/dashboard/summary/stream` | Stream SSE: avisa de cambios en el resumen |
+| GET / POST / DELETE | `/gallery`                  | Listar, subir (multipart) y borrar fotos   |
 
 ---
 
@@ -314,8 +315,8 @@ erDiagram
     }
     ENROLLMENTS {
         bigint id PK
-        bigint alumno_id FK
-        bigint taller_id FK
+        bigint student_id FK
+        bigint workshop_id FK
         date enrollment_date
         varchar progress
     }
@@ -591,11 +592,11 @@ classDiagram
 
 Los tests usan **Testcontainers**: cada ejecución levanta un PostgreSQL real en Docker, así que se prueba contra el mismo motor que en desarrollo (Docker Desktop debe estar abierto).
 
-| Tipo | Herramienta | Qué se prueba |
-|------|-------------|---------------|
-| Repositorio | `@DataJpaTest` | Consultas y relaciones de las entidades |
+| Tipo        | Herramienta                                    | Qué se prueba                                                                     |
+| ----------- | ---------------------------------------------- | --------------------------------------------------------------------------------- |
+| Repositorio | `@DataJpaTest`                                 | Consultas y relaciones de las entidades                                           |
 | Integración | `@SpringBootTest` (puerto aleatorio) + MockMvc | Controladores de extremo a extremo: validación, códigos HTTP, seguridad por roles |
-| Unitarios | JUnit 5 + Mockito | Servicios, fachadas de cifrado, `DataSeeder`, manejo de errores |
+| Unitarios   | JUnit 5 + Mockito                              | Servicios, fachadas de cifrado, `DataSeeder`, manejo de errores                   |
 
 ```bash
 # Ejecutar todos los tests
