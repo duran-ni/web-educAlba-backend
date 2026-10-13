@@ -33,12 +33,13 @@ public class Enrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Columnas en ingles, igual que el resto del esquema (materials.student_id, agenda_events.workshop_id)
     @ManyToOne
-    @JoinColumn(name = "alumno_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @ManyToOne
-    @JoinColumn(name = "taller_id", nullable = false)
+    @JoinColumn(name = "workshop_id", nullable = false)
     private Workshop workshop;
 
     private LocalDate enrollmentDate;
