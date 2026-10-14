@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/public/gallery")
 public class PublicGalleryController {
 
-    private final GalleryPhotoService galleryPhotoService;
+    private final GalleryFolderService galleryFolderService;
 
-    public PublicGalleryController(GalleryPhotoService galleryPhotoService) {
-        this.galleryPhotoService = galleryPhotoService;
+    public PublicGalleryController(GalleryFolderService galleryFolderService) {
+        this.galleryFolderService = galleryFolderService;
     }
 
     @GetMapping
-    public List<GalleryPhotoResponse> getAll() {
-        return galleryPhotoService.getAll();
+    public List<GalleryFolderWithPhotosResponse> getAll() {
+        return galleryFolderService.getAllWithPhotos();
     }
 }
