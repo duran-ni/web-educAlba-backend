@@ -9,7 +9,9 @@ public record GalleryPhotoResponse(
     Long id,
     String imageUrl,
     String caption,
-    LocalDateTime uploadedAt
+    LocalDateTime uploadedAt,
+    Long folderId,
+    String folderName
 ) {
 
 }
