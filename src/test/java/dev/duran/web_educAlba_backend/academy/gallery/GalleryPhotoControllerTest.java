@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -265,5 +266,43 @@ class GalleryPhotoControllerTest {
                 mockMvc.perform(delete("/api/admin/gallery/" + created.id())
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isBadGateway());
+        }
+
+        @Test
+        @DisplayName("Deleting a photo that was a folder's cover photo succeeds")
+        void testDelete_CoverPhoto_ReturnsNoContent() throws Exception {
+                when(uploader.upload(any(byte[].class), anyMap()))
+                                .thenReturn(Map.of(
+                                                "secure_url", "https://res.cloudinary.com/demo/cover.jpg",
+                                                "public_id", "cover-public-id"));
+
+                Long folderId = createFolder();
+
+                MockMultipartFile image = new MockMultipartFile(
+                                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+                String createBody = mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(image)
+                                .param("caption", "Foto de portada")
+                                .param("folderId", String.valueOf(folderId))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString();
+
+                GalleryPhotoResponse created = mapper.readValue(createBody, GalleryPhotoResponse.class);
+
+                mockMvc.perform(put("/api/admin/gallery/folders/" + folderId + "/cover")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"photoId\": " + created.id() + "}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isOk());
+
+                when(uploader.destroy(anyString(), anyMap())).thenReturn(Map.of("result", "ok"));
+
+                mockMvc.perform(delete("/api/admin/gallery/" + created.id())
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNoContent());
         }
 }
