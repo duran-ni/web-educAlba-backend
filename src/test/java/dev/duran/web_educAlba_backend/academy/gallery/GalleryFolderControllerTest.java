@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,13 +33,19 @@ class GalleryFolderControllerTest {
     @Autowired
     WebApplicationContext context;
 
+    @Autowired
+    GalleryFolderRepository galleryFolderRepository;
+
+    @Autowired
+    GalleryPhotoRepository galleryPhotoRepository;
+
     MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(SecurityMockMvcConfigurers.springSecurity())
-                .build();
+                        .apply(SecurityMockMvcConfigurers.springSecurity())
+                        .build();
     }
 
     @Test
@@ -83,5 +91,38 @@ class GalleryFolderControllerTest {
         mockMvc.perform(delete("/api/admin/gallery/folders/999999")
                         .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("An empty folder can be deleted")
+    void testDelete_EmptyFolder_ReturnsNoContent() throws Exception {
+        GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                .name("Carpeta vacía")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
+                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("Deleting a folder that still has photos returns Conflict")
+    void testDelete_FolderWithPhotos_ReturnsConflict() throws Exception {
+        GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                .name("Carpeta con fotos")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        galleryPhotoRepository.save(GalleryPhoto.builder()
+                .imageUrl("https://res.cloudinary.com/demo/keep.jpg")
+                .publicId("keep-public-id")
+                .uploadedAt(LocalDateTime.now())
+                .folder(folder)
+                .build());
+
+        mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
+                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isConflict());
     }
 }
