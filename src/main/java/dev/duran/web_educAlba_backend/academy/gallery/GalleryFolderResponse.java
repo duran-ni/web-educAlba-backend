@@ -7,7 +7,8 @@ public record GalleryFolderResponse(
     Long id,
     String name,
     LocalDateTime createdAt,
-    long photoCount
+    long photoCount,
+    Long coverPhotoId
 ) {
 
 }
