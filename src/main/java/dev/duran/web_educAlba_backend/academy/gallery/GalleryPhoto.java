@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,4 +40,11 @@ public class GalleryPhoto {
     private String caption;
 
     private LocalDateTime uploadedAt;
+
+    // No se marca "nullable = false" a nivel de columna: no usamos Flyway y
+    // ya existen fotos sin carpeta asignada en la base de datos actual.
+    // La obligatoriedad se garantiza en GalleryPhotoService, no en el esquema
+    @ManyToOne
+    @JoinColumn(name = "folder_id")
+    private GalleryFolder folder;
 }
