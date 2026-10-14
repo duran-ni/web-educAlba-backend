@@ -1,3 +1,16 @@
+-- Carpeta por defecto para las fotos generales de la academia.
+INSERT INTO gallery_folders (name, created_at)
+SELECT 'Nuestra academia', NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM gallery_folders WHERE name = 'Nuestra academia'
+);
+
+-- Migra cualquier foto subida antes de tener carpetas (folder_id nulo) a la
+-- carpeta general, para que ninguna foto se quede sin carpeta asignada
+UPDATE gallery_photos
+SET folder_id = (SELECT id FROM gallery_folders WHERE name = 'Nuestra academia')
+WHERE folder_id IS NULL;
+
 -- Datos de carga inicial para desarrollo y pruebas.
 -- Cada INSERT se protege con WHERE NOT EXISTS para no duplicar los talleres
 -- en cada reinicio de la aplicacion (data.sql se ejecuta en cada arranque).
