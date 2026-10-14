@@ -16,10 +16,13 @@ import com.cloudinary.utils.ObjectUtils;
 public class GalleryPhotoService {
 
     private final GalleryPhotoRepository galleryPhotoRepository;
+    private final GalleryFolderService galleryFolderService;
     private final Cloudinary cloudinary;
 
-    public GalleryPhotoService(GalleryPhotoRepository galleryPhotoRepository, Cloudinary cloudinary) {
+    public GalleryPhotoService(GalleryPhotoRepository galleryPhotoRepository,
+            GalleryFolderService galleryFolderService, Cloudinary cloudinary) {
         this.galleryPhotoRepository = galleryPhotoRepository;
+        this.galleryFolderService = galleryFolderService;
         this.cloudinary = cloudinary;
     }
 
@@ -31,7 +34,8 @@ public class GalleryPhotoService {
     }
 
     @Transactional
-    public GalleryPhotoResponse upload(MultipartFile image, String caption) {
+    public GalleryPhotoResponse upload(MultipartFile image, String caption, Long folderId) {
+        GalleryFolder folder = galleryFolderService.findFolderOrThrow(folderId);
         Map uploadResult = uploadToCloudinary(image);
 
         GalleryPhoto photo = GalleryPhoto.builder()
@@ -39,6 +43,7 @@ public class GalleryPhotoService {
                 .publicId((String) uploadResult.get("public_id"))
                 .caption(caption)
                 .uploadedAt(LocalDateTime.now())
+                .folder(folder)
                 .build();
 
         GalleryPhoto savedPhoto = galleryPhotoRepository.save(photo);
@@ -74,10 +79,13 @@ public class GalleryPhotoService {
     }
 
     private GalleryPhotoResponse toResponse(GalleryPhoto photo) {
+        GalleryFolder folder = photo.getFolder();
         return new GalleryPhotoResponse(
                 photo.getId(),
                 photo.getImageUrl(),
                 photo.getCaption(),
-                photo.getUploadedAt());
+                photo.getUploadedAt(),
+                folder != null ? folder.getId() : null,
+                folder != null ? folder.getName() : null);
     }
 }
