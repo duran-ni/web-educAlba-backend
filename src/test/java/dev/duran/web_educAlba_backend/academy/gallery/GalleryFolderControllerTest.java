@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -27,102 +28,165 @@ import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GalleryFolderControllerTest {
 
-    private static final String ADMIN_EMAIL = "admin@educalba.com";
-    private static final String ADMIN_PASSWORD = "AdminEducAlba123";
+        private static final String ADMIN_EMAIL = "admin@educalba.com";
+        private static final String ADMIN_PASSWORD = "AdminEducAlba123";
 
-    @Autowired
-    WebApplicationContext context;
+        @Autowired
+        WebApplicationContext context;
 
-    @Autowired
-    GalleryFolderRepository galleryFolderRepository;
+        @Autowired
+        GalleryFolderRepository galleryFolderRepository;
 
-    @Autowired
-    GalleryPhotoRepository galleryPhotoRepository;
+        @Autowired
+        GalleryPhotoRepository galleryPhotoRepository;
 
-    MockMvc mockMvc;
+        MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                        .apply(SecurityMockMvcConfigurers.springSecurity())
-                        .build();
-    }
+        @BeforeEach
+        void setUp() {
+                mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                                .apply(SecurityMockMvcConfigurers.springSecurity())
+                                .build();
+        }
 
-    @Test
-    @DisplayName("A new folder can be created")
-    void testCreate_ReturnsCreated() throws Exception {
-        mockMvc.perform(post("/api/admin/gallery/folders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Taller de ciencias\"}")
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Taller de ciencias"))
-                .andExpect(jsonPath("$.photoCount").value(0));
-    }
+        @Test
+        @DisplayName("A new folder can be created")
+        void testCreate_ReturnsCreated() throws Exception {
+                mockMvc.perform(post("/api/admin/gallery/folders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\": \"Taller de ciencias\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.name").value("Taller de ciencias"))
+                                .andExpect(jsonPath("$.photoCount").value(0));
+        }
 
-    @Test
-    @DisplayName("A created folder appears in the admin list")
-    void testCreate_ThenGetAll_IncludesFolder() throws Exception {
-        mockMvc.perform(post("/api/admin/gallery/folders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Manos a la obra\"}")
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isCreated());
+        @Test
+        @DisplayName("A created folder appears in the admin list")
+        void testCreate_ThenGetAll_IncludesFolder() throws Exception {
+                mockMvc.perform(post("/api/admin/gallery/folders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\": \"Manos a la obra\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/admin/gallery/folders")
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.name == 'Manos a la obra')]").exists());
-    }
+                mockMvc.perform(get("/api/admin/gallery/folders")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[?(@.name == 'Manos a la obra')]").exists());
+        }
 
-    @Test
-    @DisplayName("Creating a folder without a name is rejected")
-    void testCreate_BlankName_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/admin/gallery/folders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"\"}")
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isBadRequest());
-    }
+        @Test
+        @DisplayName("Creating a folder without a name is rejected")
+        void testCreate_BlankName_ReturnsBadRequest() throws Exception {
+                mockMvc.perform(post("/api/admin/gallery/folders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\": \"\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Deleting a folder that does not exist returns Not Found")
-    void testDelete_NonExistentFolder_ReturnsNotFound() throws Exception {
-        mockMvc.perform(delete("/api/admin/gallery/folders/999999")
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isNotFound());
-    }
+        @Test
+        @DisplayName("Deleting a folder that does not exist returns Not Found")
+        void testDelete_NonExistentFolder_ReturnsNotFound() throws Exception {
+                mockMvc.perform(delete("/api/admin/gallery/folders/999999")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNotFound());
+        }
 
-    @Test
-    @DisplayName("An empty folder can be deleted")
-    void testDelete_EmptyFolder_ReturnsNoContent() throws Exception {
-        GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
-                .name("Carpeta vacía")
-                .createdAt(LocalDateTime.now())
-                .build());
+        @Test
+        @DisplayName("An empty folder can be deleted")
+        void testDelete_EmptyFolder_ReturnsNoContent() throws Exception {
+                GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta vacía")
+                                .createdAt(LocalDateTime.now())
+                                .build());
 
-        mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isNoContent());
-    }
+                mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNoContent());
+        }
 
-    @Test
-    @DisplayName("Deleting a folder that still has photos returns Conflict")
-    void testDelete_FolderWithPhotos_ReturnsConflict() throws Exception {
-        GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
-                .name("Carpeta con fotos")
-                .createdAt(LocalDateTime.now())
-                .build());
+        @Test
+        @DisplayName("Deleting a folder that still has photos returns Conflict")
+        void testDelete_FolderWithPhotos_ReturnsConflict() throws Exception {
+                GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta con fotos")
+                                .createdAt(LocalDateTime.now())
+                                .build());
 
-        galleryPhotoRepository.save(GalleryPhoto.builder()
-                .imageUrl("https://res.cloudinary.com/demo/keep.jpg")
-                .publicId("keep-public-id")
-                .uploadedAt(LocalDateTime.now())
-                .folder(folder)
-                .build());
+                galleryPhotoRepository.save(GalleryPhoto.builder()
+                                .imageUrl("https://res.cloudinary.com/demo/keep.jpg")
+                                .publicId("keep-public-id")
+                                .uploadedAt(LocalDateTime.now())
+                                .folder(folder)
+                                .build());
 
-        mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
-                        .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
-                .andExpect(status().isConflict());
-    }
+                mockMvc.perform(delete("/api/admin/gallery/folders/" + folder.getId())
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isConflict());
+        }
+
+        @Test
+        @DisplayName("A folder's cover photo can be set to one of its own photos")
+        void testSetCoverPhoto_ReturnsUpdatedFolder() throws Exception {
+                GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta con portada")
+                                .createdAt(LocalDateTime.now())
+                                .build());
+
+                GalleryPhoto photo = galleryPhotoRepository.save(GalleryPhoto.builder()
+                                .imageUrl("https://res.cloudinary.com/demo/cover.jpg")
+                                .publicId("cover-public-id")
+                                .uploadedAt(LocalDateTime.now())
+                                .folder(folder)
+                                .build());
+
+                mockMvc.perform(put("/api/admin/gallery/folders/" + folder.getId() + "/cover")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"photoId\": " + photo.getId() + "}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.coverPhotoId").value(photo.getId()));
+        }
+
+        @Test
+        @DisplayName("Setting a photo from another folder as cover is rejected")
+        void testSetCoverPhoto_PhotoFromAnotherFolder_ReturnsBadRequest() throws Exception {
+                GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta A")
+                                .createdAt(LocalDateTime.now())
+                                .build());
+                GalleryFolder otherFolder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta B")
+                                .createdAt(LocalDateTime.now())
+                                .build());
+                GalleryPhoto photoInOtherFolder = galleryPhotoRepository.save(GalleryPhoto.builder()
+                                .imageUrl("https://res.cloudinary.com/demo/other.jpg")
+                                .publicId("other-public-id")
+                                .uploadedAt(LocalDateTime.now())
+                                .folder(otherFolder)
+                                .build());
+
+                mockMvc.perform(put("/api/admin/gallery/folders/" + folder.getId() + "/cover")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"photoId\": " + photoInOtherFolder.getId() + "}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Setting a non-existent photo as cover returns Not Found")
+        void testSetCoverPhoto_NonExistentPhoto_ReturnsNotFound() throws Exception {
+                GalleryFolder folder = galleryFolderRepository.save(GalleryFolder.builder()
+                                .name("Carpeta sin esa foto")
+                                .createdAt(LocalDateTime.now())
+                                .build());
+
+                mockMvc.perform(put("/api/admin/gallery/folders/" + folder.getId() + "/cover")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"photoId\": 999999}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNotFound());
+        }
 }
