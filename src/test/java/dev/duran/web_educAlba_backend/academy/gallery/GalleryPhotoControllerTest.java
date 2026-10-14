@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.academy.gallery;
 
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -14,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +51,9 @@ class GalleryPhotoControllerTest {
 
         @Autowired
         ObjectMapper mapper;
+
+        @Autowired
+        GalleryPhotoRepository galleryPhotoRepository;
 
         // Sustituye al bean real de Cloudinary por un doble de prueba, para no
         // subir ni borrar imagenes de verdad en la cuenta real al ejecutar los tests
@@ -127,6 +133,25 @@ class GalleryPhotoControllerTest {
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$[?(@.caption == 'Taller de ciencias')]").exists());
+        }
+
+        @Test
+        @DisplayName("A legacy photo without a folder shows null folder fields")
+        void testGetAll_PhotoWithoutFolder_ReturnsNullFolderFields() throws Exception {
+                galleryPhotoRepository.save(GalleryPhoto.builder()
+                                .imageUrl("https://res.cloudinary.com/demo/legacy.jpg")
+                                .publicId("legacy-public-id")
+                                .caption("Foto sin carpeta")
+                                .uploadedAt(LocalDateTime.now())
+                                .build());
+
+                mockMvc.perform(get("/api/admin/gallery")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[?(@.caption == 'Foto sin carpeta')].folderId")
+                                                .value(contains(nullValue())))
+                                .andExpect(jsonPath("$[?(@.caption == 'Foto sin carpeta')].folderName")
+                                                .value(contains(nullValue())));
         }
 
         @Test
