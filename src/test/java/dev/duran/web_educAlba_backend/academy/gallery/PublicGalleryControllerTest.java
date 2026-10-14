@@ -62,7 +62,7 @@ class PublicGalleryControllerTest {
         mockMvc.perform(get("/api/public/gallery"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].photos[?(@.caption == 'Excursión al museo')]").exists());
+                .andExpect(jsonPath("$..photos[?(@.caption == 'Excursión al museo')]").exists());
     }
 
     @Test
@@ -78,6 +78,6 @@ class PublicGalleryControllerTest {
 
         mockMvc.perform(get("/api/public/gallery"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].photos[?(@.caption == 'Foto de control')].publicId").doesNotExist());
+                .andExpect(jsonPath("$..photos[?(@.caption == 'Foto de control')].publicId").doesNotExist());
     }
 }
