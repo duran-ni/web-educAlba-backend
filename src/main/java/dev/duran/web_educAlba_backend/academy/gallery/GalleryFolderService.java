@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy.gallery;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,7 +33,7 @@ public class GalleryFolderService {
                 .map(folder -> new GalleryFolderWithPhotosResponse(
                         folder.getId(),
                         folder.getName(),
-                        galleryPhotoRepository.findByFolderIdOrderByUploadedAtDesc(folder.getId()).stream()
+                        orderWithCoverFirst(folder).stream()
                                 .map(this::toPhotoResponse)
                                 .toList()))
                 .toList();
@@ -50,6 +51,21 @@ public class GalleryFolderService {
     }
 
     @Transactional
+    public GalleryFolderResponse setCoverPhoto(Long folderId, GalleryFolderCoverRequest request) {
+        GalleryFolder folder = findFolderOrThrow(folderId);
+        GalleryPhoto photo = galleryPhotoRepository.findById(request.photoId())
+                .orElseThrow(() -> new GalleryPhotoNotFoundException(request.photoId()));
+
+        if (!photo.getFolder().getId().equals(folderId)) {
+            throw new GalleryPhotoNotInFolderException(photo.getId(), folderId);
+        }
+
+        folder.setCoverPhoto(photo);
+        GalleryFolder savedFolder = galleryFolderRepository.save(folder);
+        return toResponse(savedFolder);
+    }
+
+    @Transactional
     public void delete(Long id) {
         GalleryFolder folder = findFolderOrThrow(id);
         try {
@@ -60,17 +76,46 @@ public class GalleryFolderService {
         }
     }
 
+    // Si la foto borrada era la portada de alguna carpeta, la desmarcamos antes
+    // de que GalleryPhotoService la elimine, para no dejar una referencia rota
+    @Transactional
+    void clearCoverIfMatches(Long photoId) {
+        galleryFolderRepository.findByCoverPhotoId(photoId)
+                .ifPresent(folder -> {
+                    folder.setCoverPhoto(null);
+                    galleryFolderRepository.save(folder);
+                });
+    }
+
     GalleryFolder findFolderOrThrow(Long id) {
         return galleryFolderRepository.findById(id)
                 .orElseThrow(() -> new GalleryFolderNotFoundException(id));
     }
 
+    // Pone la foto marcada como portada al principio de la lista (si existe
+    // alguna), dejando el resto en el orden habitual (mas reciente primero)
+    private List<GalleryPhoto> orderWithCoverFirst(GalleryFolder folder) {
+        List<GalleryPhoto> photos = galleryPhotoRepository.findByFolderIdOrderByUploadedAtDesc(folder.getId());
+        GalleryPhoto coverPhoto = folder.getCoverPhoto();
+
+        if (coverPhoto == null) {
+            return photos;
+        }
+
+        List<GalleryPhoto> reordered = new ArrayList<>(photos);
+        reordered.remove(coverPhoto);
+        reordered.add(0, coverPhoto);
+        return reordered;
+    }
+
     private GalleryFolderResponse toResponse(GalleryFolder folder) {
+        GalleryPhoto coverPhoto = folder.getCoverPhoto();
         return new GalleryFolderResponse(
                 folder.getId(),
                 folder.getName(),
                 folder.getCreatedAt(),
-                galleryPhotoRepository.countByFolderId(folder.getId()));
+                galleryPhotoRepository.countByFolderId(folder.getId()),
+                coverPhoto != null ? coverPhoto.getId() : null);
     }
 
     private GalleryPhotoResponse toPhotoResponse(GalleryPhoto photo) {
