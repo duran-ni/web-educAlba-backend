@@ -31,8 +31,9 @@ public class GalleryPhotoController {
     @PostMapping
     public ResponseEntity<GalleryPhotoResponse> upload(
             @RequestParam("image") MultipartFile image,
-            @RequestParam(value = "caption", required = false) String caption) {
-        GalleryPhotoResponse response = galleryPhotoService.upload(image, caption);
+            @RequestParam(value = "caption", required = false) String caption,
+            @RequestParam("folderId") Long folderId) {
+        GalleryPhotoResponse response = galleryPhotoService.upload(image, caption, folderId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
