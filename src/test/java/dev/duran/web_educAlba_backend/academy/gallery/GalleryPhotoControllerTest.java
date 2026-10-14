@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -68,6 +70,20 @@ class GalleryPhotoControllerTest {
                 when(cloudinary.uploader()).thenReturn(uploader);
         }
 
+        // Crea una carpeta de prueba y devuelve su id, necesario porque ahora
+        // toda foto subida debe pertenecer a una carpeta (folderId obligatorio)
+        private Long createFolder() throws Exception {
+                String body = mockMvc.perform(post("/api/admin/gallery/folders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\": \"Carpeta de prueba\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString();
+
+                return mapper.readValue(body, GalleryFolderResponse.class).id();
+        }
+
         @Test
         @DisplayName("A new photo can be uploaded")
         void testUpload_ReturnsCreated() throws Exception {
@@ -82,6 +98,7 @@ class GalleryPhotoControllerTest {
                 mockMvc.perform(multipart("/api/admin/gallery")
                                 .file(image)
                                 .param("caption", "Día de puertas abiertas")
+                                .param("folderId", String.valueOf(createFolder()))
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("$.imageUrl").value("https://res.cloudinary.com/demo/test.jpg"))
@@ -102,6 +119,7 @@ class GalleryPhotoControllerTest {
                 mockMvc.perform(multipart("/api/admin/gallery")
                                 .file(image)
                                 .param("caption", "Taller de ciencias")
+                                .param("folderId", String.valueOf(createFolder()))
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isCreated());
 
@@ -125,6 +143,7 @@ class GalleryPhotoControllerTest {
                 String createBody = mockMvc.perform(multipart("/api/admin/gallery")
                                 .file(image)
                                 .param("caption", "Foto a borrar")
+                                .param("folderId", String.valueOf(createFolder()))
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isCreated())
                                 .andReturn()
@@ -150,6 +169,20 @@ class GalleryPhotoControllerTest {
         void testUpload_MissingImage_ReturnsBadRequest() throws Exception {
                 mockMvc.perform(multipart("/api/admin/gallery")
                                 .param("caption", "Sin imagen")
+                                .param("folderId", String.valueOf(createFolder()))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Uploading without a folder is rejected")
+        void testUpload_MissingFolderId_ReturnsBadRequest() throws Exception {
+                MockMultipartFile image = new MockMultipartFile(
+                                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+                mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(image)
+                                .param("caption", "Sin carpeta")
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isBadRequest());
         }
@@ -165,6 +198,7 @@ class GalleryPhotoControllerTest {
 
                 mockMvc.perform(multipart("/api/admin/gallery")
                                 .file(image)
+                                .param("folderId", String.valueOf(createFolder()))
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isBadGateway());
         }
@@ -191,6 +225,7 @@ class GalleryPhotoControllerTest {
                 String createBody = mockMvc.perform(multipart("/api/admin/gallery")
                                 .file(image)
                                 .param("caption", "Foto que falla al borrar")
+                                .param("folderId", String.valueOf(createFolder()))
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isCreated())
                                 .andReturn()
