@@ -53,6 +53,7 @@ public class GalleryPhotoService {
     @Transactional
     public void delete(Long id) {
         GalleryPhoto photo = findPhotoOrThrow(id);
+        galleryFolderService.clearCoverIfMatches(id);
         deleteFromCloudinary(photo.getPublicId());
         galleryPhotoRepository.delete(photo);
     }
