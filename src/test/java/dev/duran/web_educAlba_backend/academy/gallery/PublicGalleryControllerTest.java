@@ -29,6 +29,9 @@ class PublicGalleryControllerTest {
     @Autowired
     GalleryPhotoRepository galleryPhotoRepository;
 
+    @Autowired
+    GalleryFolderRepository galleryFolderRepository;
+
     MockMvc mockMvc;
 
     @BeforeEach
@@ -36,6 +39,13 @@ class PublicGalleryControllerTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
+    }
+
+    private GalleryFolder createFolder() {
+        return galleryFolderRepository.save(GalleryFolder.builder()
+                .name("Carpeta de prueba")
+                .createdAt(LocalDateTime.now())
+                .build());
     }
 
     @Test
@@ -46,12 +56,13 @@ class PublicGalleryControllerTest {
                 .publicId("sample-public-id")
                 .caption("Excursión al museo")
                 .uploadedAt(LocalDateTime.now())
+                .folder(createFolder())
                 .build());
 
         mockMvc.perform(get("/api/public/gallery"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[?(@.caption == 'Excursión al museo')]").exists());
+                .andExpect(jsonPath("$[0].photos[?(@.caption == 'Excursión al museo')]").exists());
     }
 
     @Test
@@ -62,10 +73,11 @@ class PublicGalleryControllerTest {
                 .publicId("should-not-be-exposed")
                 .caption("Foto de control")
                 .uploadedAt(LocalDateTime.now())
+                .folder(createFolder())
                 .build());
 
         mockMvc.perform(get("/api/public/gallery"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.caption == 'Foto de control')].publicId").doesNotExist());
+                .andExpect(jsonPath("$[0].photos[?(@.caption == 'Foto de control')].publicId").doesNotExist());
     }
 }
