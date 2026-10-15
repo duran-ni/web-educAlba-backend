@@ -91,6 +91,29 @@ class GalleryPhotoControllerTest {
                 return mapper.readValue(body, GalleryFolderResponse.class).id();
         }
 
+        // Sube una foto de prueba y devuelve la respuesta ya deserializada,
+        // reutilizado por los tests que necesitan partir de una foto existente
+        private GalleryPhotoResponse uploadPhoto(String caption) throws Exception {
+                when(uploader.upload(any(byte[].class), anyMap()))
+                                .thenReturn(Map.of(
+                                                "secure_url", "https://res.cloudinary.com/demo/" + caption + ".jpg",
+                                                "public_id", caption + "-public-id"));
+
+                MockMultipartFile image = new MockMultipartFile(
+                                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+                String body = mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(image)
+                                .param("caption", caption)
+                                .param("folderId", String.valueOf(createFolder()))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString();
+
+                return mapper.readValue(body, GalleryPhotoResponse.class);
+        }
+
         @Test
         @DisplayName("A new photo can be uploaded")
         void testUpload_ReturnsCreated() throws Exception {
@@ -304,5 +327,28 @@ class GalleryPhotoControllerTest {
                 mockMvc.perform(delete("/api/admin/gallery/" + created.id())
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @DisplayName("A photo's caption can be updated")
+        void testUpdateCaption_ReturnsOkWithNewCaption() throws Exception {
+                GalleryPhotoResponse created = uploadPhoto("Pie de foto original");
+
+                mockMvc.perform(put("/api/admin/gallery/" + created.id())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"caption\": \"Pie de foto corregido\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.caption").value("Pie de foto corregido"));
+        }
+
+        @Test
+        @DisplayName("Updating the caption of a photo that does not exist returns Not Found")
+        void testUpdateCaption_NonExistentPhoto_ReturnsNotFound() throws Exception {
+                mockMvc.perform(put("/api/admin/gallery/999999")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"caption\": \"No importa\"}")
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNotFound());
         }
 }
