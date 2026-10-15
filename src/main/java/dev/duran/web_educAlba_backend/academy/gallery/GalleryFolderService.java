@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,11 @@ public class GalleryFolderService {
     }
 
     @Transactional(readOnly = true)
-    public List<GalleryFolderWithPhotosResponse> getAllWithPhotos() {
-        return galleryFolderRepository.findAllByOrderByCreatedAtAsc().stream()
+    public GalleryFolderPageResponse getAllWithPhotos(int page, int size) {
+        Page<GalleryFolder> folderPage = galleryFolderRepository
+                .findAllByOrderByCreatedAtAsc(PageRequest.of(page, size));
+
+        List<GalleryFolderWithPhotosResponse> folders = folderPage.getContent().stream()
                 .map(folder -> new GalleryFolderWithPhotosResponse(
                         folder.getId(),
                         folder.getName(),
@@ -37,6 +42,8 @@ public class GalleryFolderService {
                                 .map(this::toPhotoResponse)
                                 .toList()))
                 .toList();
+
+        return new GalleryFolderPageResponse(folders, folderPage.hasNext());
     }
 
     @Transactional
