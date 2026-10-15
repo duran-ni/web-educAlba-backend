@@ -42,9 +42,21 @@ public class GalleryFolderService {
     }
 
     @Transactional(readOnly = true)
-    public GalleryFolderWithPhotosResponse getOneWithPhotos(Long id) {
+    public GalleryFolderPhotosPageResponse getOneWithPhotos(Long id, int page, int size) {
         GalleryFolder folder = findFolderOrThrow(id);
-        return toWithPhotosResponse(folder);
+
+        Page<GalleryPhoto> photoPage = galleryPhotoRepository
+                .findByFolderIdOrderByUploadedAtDesc(id, PageRequest.of(page, size));
+
+        List<GalleryPhoto> photos = placeCoverFirstOnFirstPage(
+                new ArrayList<>(photoPage.getContent()), folder, page);
+
+        List<GalleryPhotoResponse> photoResponses = photos.stream()
+                .map(this::toPhotoResponse)
+                .toList();
+
+        return new GalleryFolderPhotosPageResponse(
+                folder.getId(), folder.getName(), photoResponses, photoPage.hasNext());
     }
 
     @Transactional
@@ -100,8 +112,35 @@ public class GalleryFolderService {
                 .orElseThrow(() -> new GalleryFolderNotFoundException(id));
     }
 
+    // En la primera pagina, adelanta la foto de portada (si existe) a la
+    // primera posicion. Si esa foto no estaba ya entre las de esta pagina
+    // (por ser mas antigua que el resto), se saca la ultima foto de la
+    // pagina para dejarle sitio: como cada pagina se sigue calculando por
+    // fecha en la base de datos (offset/limite, independiente de este
+    // reordenado en memoria), esa foto desplazada no se pierde ni se
+    // duplica, sera la primera foto de la pagina siguiente
+    private List<GalleryPhoto> placeCoverFirstOnFirstPage(List<GalleryPhoto> photos, GalleryFolder folder,
+            int page) {
+        GalleryPhoto coverPhoto = folder.getCoverPhoto();
+
+        if (page != 0 || coverPhoto == null) {
+            return photos;
+        }
+
+        boolean coverWasAlreadyInPage = photos.remove(coverPhoto);
+        if (!coverWasAlreadyInPage && !photos.isEmpty()) {
+            photos.remove(photos.size() - 1);
+        }
+
+        photos.add(0, coverPhoto);
+        return photos;
+    }
+
     // Pone la foto marcada como portada al principio de la lista (si existe
-    // alguna), dejando el resto en el orden habitual (mas reciente primero)
+    // alguna), dejando el resto en el orden habitual (mas reciente primero).
+    // A diferencia de placeCoverFirstOnFirstPage, aqui se trabaja siempre con
+    // la lista COMPLETA de fotos de la carpeta (sin paginar), por eso no hay
+    // riesgo de perder ni duplicar fotos al adelantar la portada
     private List<GalleryPhoto> orderWithCoverFirst(GalleryFolder folder) {
         List<GalleryPhoto> photos = galleryPhotoRepository.findByFolderIdOrderByUploadedAtDesc(folder.getId());
         GalleryPhoto coverPhoto = folder.getCoverPhoto();
