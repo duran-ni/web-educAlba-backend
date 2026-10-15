@@ -48,17 +48,21 @@ public class PublicGalleryControllerTest {
                                 .build());
         }
 
+        private GalleryPhoto createPhoto(GalleryFolder folder, String caption) {
+                return galleryPhotoRepository.save(GalleryPhoto.builder()
+                                .imageUrl("https://res.cloudinary.com/demo/" + caption.hashCode() + ".jpg")
+                                .publicId("public-id-" + caption.hashCode())
+                                .caption(caption)
+                                .uploadedAt(LocalDateTime.now())
+                                .folder(folder)
+                                .build());
+        }
+
         @Test
         @DisplayName("A visitor can list all photos without authentication")
         void testGetAll_ReturnsOk() throws Exception {
                 long existingFolders = galleryFolderRepository.count();
-                galleryPhotoRepository.save(GalleryPhoto.builder()
-                                .imageUrl("https://res.cloudinary.com/demo/sample.jpg")
-                                .publicId("sample-public-id")
-                                .caption("Excursión al museo")
-                                .uploadedAt(LocalDateTime.now())
-                                .folder(createFolder())
-                                .build());
+                createPhoto(createFolder(), "Excursión al museo");
 
                 mockMvc.perform(get("/api/public/gallery?size=" + (existingFolders + 1)))
                                 .andExpect(status().isOk())
@@ -71,13 +75,7 @@ public class PublicGalleryControllerTest {
         @DisplayName("The public response never exposes the Cloudinary public id")
         void testGetAll_DoesNotExposePublicId() throws Exception {
                 long existingFolders = galleryFolderRepository.count();
-                galleryPhotoRepository.save(GalleryPhoto.builder()
-                                .imageUrl("https://res.cloudinary.com/demo/private.jpg")
-                                .publicId("should-not-be-exposed")
-                                .caption("Foto de control")
-                                .uploadedAt(LocalDateTime.now())
-                                .folder(createFolder())
-                                .build());
+                createPhoto(createFolder(), "Foto de control");
 
                 mockMvc.perform(get("/api/public/gallery?size=" + (existingFolders + 1)))
                                 .andExpect(status().isOk())
@@ -115,13 +113,7 @@ public class PublicGalleryControllerTest {
         @DisplayName("A visitor can fetch a single folder by its id")
         void testGetOne_ReturnsOk() throws Exception {
                 GalleryFolder folder = createFolder();
-                galleryPhotoRepository.save(GalleryPhoto.builder()
-                                .imageUrl("https://res.cloudinary.com/demo/single.jpg")
-                                .publicId("single-public-id")
-                                .caption("Clase de robótica")
-                                .uploadedAt(LocalDateTime.now())
-                                .folder(folder)
-                                .build());
+                createPhoto(folder, "Clase de robótica");
 
                 mockMvc.perform(get("/api/public/gallery/" + folder.getId()))
                                 .andExpect(status().isOk())
@@ -134,5 +126,46 @@ public class PublicGalleryControllerTest {
         void testGetOne_ReturnsNotFound_WhenFolderDoesNotExist() throws Exception {
                 mockMvc.perform(get("/api/public/gallery/999999"))
                                 .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Pagination of a folder's photos returns only the requested page size "
+                        + "and reports that more photos remain")
+        void testGetOne_RespectsPageSizeAndReportsHasMore() throws Exception {
+                GalleryFolder folder = createFolder();
+                createPhoto(folder, "Foto uno");
+                createPhoto(folder, "Foto dos");
+                createPhoto(folder, "Foto tres");
+
+                mockMvc.perform(get("/api/public/gallery/" + folder.getId() + "?page=0&size=2"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.photos.length()").value(2))
+                                .andExpect(jsonPath("$.hasMore").value(true));
+        }
+
+        @Test
+        @DisplayName("Pagination of a folder's photos reports no more photos when everything fits in the page")
+        void testGetOne_HasMoreFalse_WhenAllPhotosFitInPage() throws Exception {
+                GalleryFolder folder = createFolder();
+                createPhoto(folder, "Única foto");
+
+                mockMvc.perform(get("/api/public/gallery/" + folder.getId() + "?page=0&size=10"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.hasMore").value(false));
+        }
+
+        @Test
+        @DisplayName("The cover photo is shown first on the first page when it was already there")
+        void testGetOne_PlacesCoverPhotoFirst() throws Exception {
+                GalleryFolder folder = createFolder();
+                createPhoto(folder, "Foto reciente");
+                GalleryPhoto cover = createPhoto(folder, "Foto de portada");
+
+                folder.setCoverPhoto(cover);
+                galleryFolderRepository.save(folder);
+
+                mockMvc.perform(get("/api/public/gallery/" + folder.getId() + "?page=0&size=10"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.photos[0].caption").value("Foto de portada"));
         }
 }
