@@ -51,6 +51,14 @@ public class GalleryPhotoService {
     }
 
     @Transactional
+    public GalleryPhotoResponse updateCaption(Long id, GalleryPhotoCaptionRequest request) {
+        GalleryPhoto photo = findPhotoOrThrow(id);
+        photo.setCaption(request.caption());
+        GalleryPhoto savedPhoto = galleryPhotoRepository.save(photo);
+        return toResponse(savedPhoto);
+    }
+
+    @Transactional
     public void delete(Long id) {
         GalleryPhoto photo = findPhotoOrThrow(id);
         galleryFolderService.clearCoverIfMatches(id);
