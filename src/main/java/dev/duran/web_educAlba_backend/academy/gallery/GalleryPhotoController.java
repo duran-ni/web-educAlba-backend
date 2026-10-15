@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +37,12 @@ public class GalleryPhotoController {
             @RequestParam("folderId") Long folderId) {
         GalleryPhotoResponse response = galleryPhotoService.upload(image, caption, folderId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}")
+    public GalleryPhotoResponse updateCaption(
+            @PathVariable Long id, @RequestBody GalleryPhotoCaptionRequest request) {
+        return galleryPhotoService.updateCaption(id, request);
     }
 
     @DeleteMapping("/{id}")
