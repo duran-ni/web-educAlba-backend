@@ -1,9 +1,8 @@
 package dev.duran.web_educAlba_backend.academy.gallery;
 
-import java.util.List;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -17,7 +16,9 @@ public class PublicGalleryController {
     }
 
     @GetMapping
-    public List<GalleryFolderWithPhotosResponse> getAll() {
-        return galleryFolderService.getAllWithPhotos();
+    public GalleryFolderPageResponse getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+        return galleryFolderService.getAllWithPhotos(page, size);
     }
 }
