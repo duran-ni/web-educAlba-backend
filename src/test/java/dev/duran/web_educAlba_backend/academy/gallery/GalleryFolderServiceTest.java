@@ -1,12 +1,14 @@
 package dev.duran.web_educAlba_backend.academy.gallery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -111,5 +113,29 @@ public class GalleryFolderServiceTest {
         GalleryFolderPageResponse result = galleryFolderService.getAllWithPhotos(0, 10);
 
         assertThat(result.folders().get(0).photos().get(0).id()).isEqualTo(11L);
+    }
+
+    @Test
+    @DisplayName("getOneWithPhotos returns the folder with its photos")
+    void getOneWithPhotos_ReturnsFolderWithPhotos() {
+        GalleryFolder folder = buildFolder(1L);
+        GalleryPhoto photo = buildPhoto(10L, folder);
+
+        when(galleryFolderRepository.findById(1L)).thenReturn(Optional.of(folder));
+        when(galleryPhotoRepository.findByFolderIdOrderByUploadedAtDesc(1L)).thenReturn(List.of(photo));
+
+        GalleryFolderWithPhotosResponse result = galleryFolderService.getOneWithPhotos(1L);
+
+        assertThat(result.id()).isEqualTo(1L);
+        assertThat(result.photos()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("getOneWithPhotos throws when the folder does not exist")
+    void getOneWithPhotos_ThrowsWhenFolderDoesNotExist() {
+        when(galleryFolderRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> galleryFolderService.getOneWithPhotos(1L))
+                .isInstanceOf(GalleryFolderNotFoundException.class);
     }
 }
