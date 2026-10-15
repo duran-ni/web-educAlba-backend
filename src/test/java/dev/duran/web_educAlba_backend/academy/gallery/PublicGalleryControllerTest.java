@@ -21,7 +21,7 @@ import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class PublicGalleryControllerTest {
+public class PublicGalleryControllerTest {
 
     @Autowired
     WebApplicationContext context;
@@ -51,6 +51,7 @@ class PublicGalleryControllerTest {
     @Test
     @DisplayName("A visitor can list all photos without authentication")
     void testGetAll_ReturnsOk() throws Exception {
+        long existingFolders = galleryFolderRepository.count();
         galleryPhotoRepository.save(GalleryPhoto.builder()
                 .imageUrl("https://res.cloudinary.com/demo/sample.jpg")
                 .publicId("sample-public-id")
@@ -59,15 +60,16 @@ class PublicGalleryControllerTest {
                 .folder(createFolder())
                 .build());
 
-        mockMvc.perform(get("/api/public/gallery"))
+        mockMvc.perform(get("/api/public/gallery?size=" + (existingFolders + 1)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$..photos[?(@.caption == 'Excursión al museo')]").exists());
+                .andExpect(jsonPath("$.folders").isArray())
+                .andExpect(jsonPath("$.folders..photos[?(@.caption == 'Excursión al museo')]").exists());
     }
 
     @Test
     @DisplayName("The public response never exposes the Cloudinary public id")
     void testGetAll_DoesNotExposePublicId() throws Exception {
+        long existingFolders = galleryFolderRepository.count();
         galleryPhotoRepository.save(GalleryPhoto.builder()
                 .imageUrl("https://res.cloudinary.com/demo/private.jpg")
                 .publicId("should-not-be-exposed")
@@ -76,8 +78,34 @@ class PublicGalleryControllerTest {
                 .folder(createFolder())
                 .build());
 
-        mockMvc.perform(get("/api/public/gallery"))
+        mockMvc.perform(get("/api/public/gallery?size=" + (existingFolders + 1)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$..photos[?(@.caption == 'Foto de control')].publicId").doesNotExist());
+                .andExpect(jsonPath("$.folders..photos[?(@.caption == 'Foto de control')].publicId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("Pagination returns only the requested page size and reports that more folders remain")
+    void testGetAll_RespectsPageSizeAndReportsHasMore() throws Exception {
+        long existingFolders = galleryFolderRepository.count();
+        createFolder();
+        createFolder();
+
+        long size = existingFolders + 1;
+
+        mockMvc.perform(get("/api/public/gallery?page=0&size=" + size))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.folders.length()").value((int) size))
+                .andExpect(jsonPath("$.hasMore").value(true));
+    }
+
+    @Test
+    @DisplayName("Pagination reports no more folders when everything fits in the page")
+    void testGetAll_HasMoreFalse_WhenAllFoldersFitInPage() throws Exception {
+        createFolder();
+        long totalFolders = galleryFolderRepository.count();
+
+        mockMvc.perform(get("/api/public/gallery?page=0&size=" + totalFolders))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasMore").value(false));
     }
 }
