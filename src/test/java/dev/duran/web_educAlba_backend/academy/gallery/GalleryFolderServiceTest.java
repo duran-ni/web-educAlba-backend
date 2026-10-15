@@ -256,4 +256,22 @@ public class GalleryFolderServiceTest {
         assertThat(result.photos().get(0).id()).isEqualTo(20L);
         assertThat(result.photos().get(1).id()).isEqualTo(21L);
     }
+
+    @Test
+    @DisplayName("getOneWithPhotos does not fail when the first page comes back empty but the folder has a cover set")
+    void getOneWithPhotos_DoesNotFailWhenFirstPageIsEmptyButCoverIsSet() {
+        GalleryFolder folder = buildFolder(1L);
+        GalleryPhoto cover = buildPhoto(99L, folder);
+        folder.setCoverPhoto(cover);
+
+        Page<GalleryPhoto> photoPage = new PageImpl<>(List.of(), PageRequest.of(0, 8), 0);
+        when(galleryFolderRepository.findById(1L)).thenReturn(Optional.of(folder));
+        when(galleryPhotoRepository.findByFolderIdOrderByUploadedAtDesc(eq(1L), any(Pageable.class)))
+                .thenReturn(photoPage);
+
+        GalleryFolderPhotosPageResponse result = galleryFolderService.getOneWithPhotos(1L, 0, 8);
+
+        assertThat(result.photos()).hasSize(1);
+        assertThat(result.photos().get(0).id()).isEqualTo(99L);
+    }
 }
