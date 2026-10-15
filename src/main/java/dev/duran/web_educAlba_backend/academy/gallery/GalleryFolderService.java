@@ -35,15 +35,16 @@ public class GalleryFolderService {
                 .findAllByOrderByCreatedAtAsc(PageRequest.of(page, size));
 
         List<GalleryFolderWithPhotosResponse> folders = folderPage.getContent().stream()
-                .map(folder -> new GalleryFolderWithPhotosResponse(
-                        folder.getId(),
-                        folder.getName(),
-                        orderWithCoverFirst(folder).stream()
-                                .map(this::toPhotoResponse)
-                                .toList()))
+                .map(this::toWithPhotosResponse)
                 .toList();
 
         return new GalleryFolderPageResponse(folders, folderPage.hasNext());
+    }
+
+    @Transactional(readOnly = true)
+    public GalleryFolderWithPhotosResponse getOneWithPhotos(Long id) {
+        GalleryFolder folder = findFolderOrThrow(id);
+        return toWithPhotosResponse(folder);
     }
 
     @Transactional
@@ -113,6 +114,15 @@ public class GalleryFolderService {
         reordered.remove(coverPhoto);
         reordered.add(0, coverPhoto);
         return reordered;
+    }
+
+    private GalleryFolderWithPhotosResponse toWithPhotosResponse(GalleryFolder folder) {
+        return new GalleryFolderWithPhotosResponse(
+                folder.getId(),
+                folder.getName(),
+                orderWithCoverFirst(folder).stream()
+                        .map(this::toPhotoResponse)
+                        .toList());
     }
 
     private GalleryFolderResponse toResponse(GalleryFolder folder) {
