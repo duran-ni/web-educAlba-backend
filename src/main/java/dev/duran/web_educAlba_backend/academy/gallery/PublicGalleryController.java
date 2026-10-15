@@ -24,7 +24,10 @@ public class PublicGalleryController {
     }
 
     @GetMapping("/{id}")
-    public GalleryFolderWithPhotosResponse getOne(@PathVariable Long id) {
-        return galleryFolderService.getOneWithPhotos(id);
+    public GalleryFolderPhotosPageResponse getOne(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+        return galleryFolderService.getOneWithPhotos(id, page, size);
     }
 }
