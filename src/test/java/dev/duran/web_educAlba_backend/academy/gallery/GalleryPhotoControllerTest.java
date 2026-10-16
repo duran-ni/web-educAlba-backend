@@ -4,9 +4,12 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -350,5 +353,82 @@ class GalleryPhotoControllerTest {
                                 .content("{\"caption\": \"No importa\"}")
                                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                                 .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("A video can be uploaded and is marked with mediaType VIDEO")
+        void testUpload_VideoFile_ReturnsMediaTypeVideo() throws Exception {
+                when(uploader.upload(any(byte[].class), anyMap()))
+                                .thenReturn(Map.of(
+                                                "secure_url", "https://res.cloudinary.com/demo/clip.mp4",
+                                                "public_id", "clip-public-id",
+                                                "resource_type", "video"));
+
+                MockMultipartFile video = new MockMultipartFile(
+                                "image", "clip.mp4", "video/mp4", "fake-video-content".getBytes());
+
+                mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(video)
+                                .param("caption", "Actuación de fin de curso")
+                                .param("folderId", String.valueOf(createFolder()))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.mediaType").value("VIDEO"));
+        }
+
+        @Test
+        @DisplayName("A photo with an explicit resource_type is marked with mediaType PHOTO")
+        void testUpload_PhotoFile_ReturnsMediaTypePhoto() throws Exception {
+                when(uploader.upload(any(byte[].class), anyMap()))
+                                .thenReturn(Map.of(
+                                                "secure_url", "https://res.cloudinary.com/demo/photo.jpg",
+                                                "public_id", "photo-public-id",
+                                                "resource_type", "image"));
+
+                MockMultipartFile image = new MockMultipartFile(
+                                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+                mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(image)
+                                .param("caption", "Foto de la excursión")
+                                .param("folderId", String.valueOf(createFolder()))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.mediaType").value("PHOTO"));
+        }
+
+        @Test
+        @DisplayName("Deleting a video tells Cloudinary its resource type is video")
+        void testDelete_Video_DestroysWithVideoResourceType() throws Exception {
+                when(uploader.upload(any(byte[].class), anyMap()))
+                                .thenReturn(Map.of(
+                                                "secure_url", "https://res.cloudinary.com/demo/to-delete.mp4",
+                                                "public_id", "to-delete-public-id",
+                                                "resource_type", "video"));
+
+                MockMultipartFile video = new MockMultipartFile(
+                                "image", "clip.mp4", "video/mp4", "fake-video-content".getBytes());
+
+                String createBody = mockMvc.perform(multipart("/api/admin/gallery")
+                                .file(video)
+                                .param("caption", "Vídeo a borrar")
+                                .param("folderId", String.valueOf(createFolder()))
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isCreated())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString();
+
+                GalleryPhotoResponse created = mapper.readValue(createBody, GalleryPhotoResponse.class);
+
+                when(uploader.destroy(anyString(), anyMap())).thenReturn(Map.of("result", "ok"));
+
+                mockMvc.perform(delete("/api/admin/gallery/" + created.id())
+                                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                                .andExpect(status().isNoContent());
+
+                verify(uploader).destroy(
+                                eq("to-delete-public-id"),
+                                argThat(options -> "video".equals(options.get("resource_type"))));
         }
 }
