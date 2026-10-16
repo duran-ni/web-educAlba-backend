@@ -178,6 +178,7 @@ public class GalleryFolderService {
         return new GalleryPhotoResponse(
                 photo.getId(),
                 photo.getImageUrl(),
+                photo.getMediaType(),
                 photo.getCaption(),
                 photo.getUploadedAt(),
                 photo.getFolder().getId(),
