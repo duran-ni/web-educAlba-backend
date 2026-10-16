@@ -3,6 +3,8 @@ package dev.duran.web_educAlba_backend.academy.gallery;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,12 +32,17 @@ public class GalleryPhoto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // URL segura (https://) que devuelve Cloudinary tras subir la imagen
+    // URL segura (https://) que devuelve Cloudinary tras subir la imagen o el video
     private String imageUrl;
 
-    // Identificador interno de Cloudinary para esta imagen, necesario para
-    // poder borrarla de Cloudinary cuando se elimine desde el admin
+    // Identificador interno de Cloudinary para esta imagen o video, necesario
+    // para poder borrarlo de Cloudinary cuando se elimine desde el admin
     private String publicId;
+
+    // Indica si el archivo subido es una fotografia o un video, para que el
+    // frontend sepa si debe mostrarlo con <img> o con <video>
+    @Enumerated(EnumType.STRING)
+    private GalleryMediaType mediaType;
 
     private String caption;
 
