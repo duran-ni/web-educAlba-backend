@@ -41,6 +41,7 @@ public class GalleryPhotoService {
         GalleryPhoto photo = GalleryPhoto.builder()
                 .imageUrl((String) uploadResult.get("secure_url"))
                 .publicId((String) uploadResult.get("public_id"))
+                .mediaType(resolveMediaType(uploadResult))
                 .caption(caption)
                 .uploadedAt(LocalDateTime.now())
                 .folder(folder)
@@ -62,24 +63,40 @@ public class GalleryPhotoService {
     public void delete(Long id) {
         GalleryPhoto photo = findPhotoOrThrow(id);
         galleryFolderService.clearCoverIfMatches(id);
-        deleteFromCloudinary(photo.getPublicId());
+        deleteFromCloudinary(photo.getPublicId(), photo.getMediaType());
         galleryPhotoRepository.delete(photo);
     }
 
     private Map uploadToCloudinary(MultipartFile image) {
         try {
-            return cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+            // "resource_type: auto" permite que Cloudinary detecte por si mismo
+            // si el archivo subido es una imagen o un video, y lo almacene y
+            // procese de la forma adecuada para cada caso
+            return cloudinary.uploader().upload(image.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException ex) {
             throw new GalleryUploadException("subir", ex);
         }
     }
 
-    private void deleteFromCloudinary(String publicId) {
+    private void deleteFromCloudinary(String publicId, GalleryMediaType mediaType) {
         try {
-            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            // Cloudinary asume "image" por defecto en destroy() si no se le indica
+            // lo contrario, por lo que hay que decirle explicitamente "video"
+            // cuando corresponda, o no encontrara el archivo a borrar
+            String resourceType = mediaType == GalleryMediaType.VIDEO ? "video" : "image";
+            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType));
         } catch (IOException ex) {
             throw new GalleryUploadException("eliminar", ex);
         }
+    }
+
+    // Traduce el "resource_type" que devuelve Cloudinary ("image" o "video")
+    // a nuestro propio enum, para no acoplar el resto de la aplicacion al
+    // formato de respuesta concreto de Cloudinary
+    private GalleryMediaType resolveMediaType(Map uploadResult) {
+        return "video".equals(uploadResult.get("resource_type"))
+                ? GalleryMediaType.VIDEO
+                : GalleryMediaType.PHOTO;
     }
 
     private GalleryPhoto findPhotoOrThrow(Long id) {
@@ -92,6 +109,7 @@ public class GalleryPhotoService {
         return new GalleryPhotoResponse(
                 photo.getId(),
                 photo.getImageUrl(),
+                photo.getMediaType(),
                 photo.getCaption(),
                 photo.getUploadedAt(),
                 folder != null ? folder.getId() : null,
