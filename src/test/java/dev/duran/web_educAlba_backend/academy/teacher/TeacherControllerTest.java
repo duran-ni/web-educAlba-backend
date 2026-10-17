@@ -1,12 +1,21 @@
 package dev.duran.web_educAlba_backend.academy.teacher;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.IOException;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +24,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Uploader;
 
 import dev.duran.web_educAlba_backend.TestcontainersConfiguration;
 import tools.jackson.databind.ObjectMapper;
@@ -36,6 +50,13 @@ class TeacherControllerTest {
     @Autowired
     ObjectMapper mapper;
 
+    // Sustituye al bean real de Cloudinary por un doble de prueba, para no
+    // subir ni borrar imágenes de verdad en la cuenta real al ejecutar los tests
+    @MockitoBean
+    Cloudinary cloudinary;
+
+    Uploader uploader;
+
     MockMvc mockMvc;
 
     @BeforeEach
@@ -43,6 +64,25 @@ class TeacherControllerTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
+
+        // cloudinary.uploader() es quien hace la subida/borrado real, asi que
+        // también lo mockeamos para controlar lo que "responde" Cloudinary
+        uploader = mock(Uploader.class);
+        when(cloudinary.uploader()).thenReturn(uploader);
+    }
+
+    private Long createTeacher(String name, String specialty) throws Exception {
+        TeacherRequest request = new TeacherRequest(name, specialty);
+
+        String body = mockMvc.perform(post("/api/admin/teachers")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return mapper.readValue(body, TeacherResponse.class).id();
     }
 
     @Test
@@ -56,7 +96,8 @@ class TeacherControllerTest {
                 .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Laura Gómez"))
-                .andExpect(jsonPath("$.specialty").value("Matemáticas"));
+                .andExpect(jsonPath("$.specialty").value("Matemáticas"))
+                .andExpect(jsonPath("$.photoUrl").doesNotExist());
     }
 
     @Test
@@ -140,6 +181,82 @@ class TeacherControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("A photo can be uploaded for an existing teacher")
+    void testUploadPhoto_ReturnsOkWithPhotoUrl() throws Exception {
+        Long teacherId = createTeacher("Elena Vidal", "Dibujo");
+
+        when(uploader.upload(any(byte[].class), anyMap())).thenReturn(Map.of(
+                "secure_url", "https://res.cloudinary.com/demo/elena.jpg",
+                "public_id", "elena-public-id"));
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+        mockMvc.perform(multipart("/api/admin/teachers/" + teacherId + "/photo")
+                .file(image)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.photoUrl").value("https://res.cloudinary.com/demo/elena.jpg"));
+    }
+
+    @Test
+    @DisplayName("Uploading a photo for a teacher that does not exist returns Not Found")
+    void testUploadPhoto_NonExistentTeacher_ReturnsNotFound() throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+        mockMvc.perform(multipart("/api/admin/teachers/999999/photo")
+                .file(image)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("A Cloudinary failure during photo upload returns Bad Gateway")
+    void testUploadPhoto_CloudinaryFailure_ReturnsBadGateway() throws Exception {
+        Long teacherId = createTeacher("Iván Castro", "Tecnología");
+
+        when(uploader.upload(any(byte[].class), anyMap()))
+                .thenThrow(new IOException("Cloudinary no responde"));
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+        mockMvc.perform(multipart("/api/admin/teachers/" + teacherId + "/photo")
+                .file(image)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isBadGateway());
+    }
+
+    @Test
+    @DisplayName("A deleted teacher with a photo also removes it from Cloudinary")
+    void testDelete_TeacherWithPhoto_DestroysCloudinaryPhoto() throws Exception {
+        Long teacherId = createTeacher("Sofía Díaz", "Música");
+
+        when(uploader.upload(any(byte[].class), anyMap())).thenReturn(Map.of(
+                "secure_url", "https://res.cloudinary.com/demo/sofia.jpg",
+                "public_id", "sofia-public-id"));
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());
+
+        mockMvc.perform(multipart("/api/admin/teachers/" + teacherId + "/photo")
+                .file(image)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isOk());
+
+        when(uploader.destroy(anyString(), anyMap())).thenReturn(Map.of("result", "ok"));
+
+        mockMvc.perform(delete("/api/admin/teachers/" + teacherId)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/admin/teachers/" + teacherId)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                 .andExpect(status().isNotFound());
     }
 
