@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 
@@ -44,6 +46,11 @@ public class TeacherController {
     @PutMapping("/{id}")
     public TeacherResponse update(@PathVariable Long id, @Valid @RequestBody TeacherRequest request) {
         return teacherService.update(id, request);
+    }
+
+    @PostMapping("/{id}/photo")
+    public TeacherResponse uploadPhoto(@PathVariable Long id, @RequestParam("image") MultipartFile image) {
+        return teacherService.uploadPhoto(id, image);
     }
 
     @DeleteMapping("/{id}")
