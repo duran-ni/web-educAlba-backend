@@ -96,7 +96,7 @@ class MaterialControllerTest {
     void testUpload_ReturnsCreated() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/worksheet.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/worksheet.pdf",
                         "public_id", "worksheet-public-id"));
 
         Long studentId = createStudent();
@@ -109,8 +109,30 @@ class MaterialControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Worksheet 1"))
-                .andExpect(jsonPath("$.fileUrl").value("https://res.cloudinary.com/demo/worksheet.pdf"))
+                .andExpect(jsonPath("$.fileUrl").value("https://res.cloudinary.com/demo/raw/upload/worksheet.pdf"))
+                .andExpect(jsonPath("$.downloadUrl").value(
+                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1.pdf/worksheet.pdf"))
                 .andExpect(jsonPath("$.studentFullName").value("Carlos Diaz"));
+    }
+
+    @Test
+    @DisplayName("A material's download URL slugifies accents, spaces and symbols in the title")
+    void testUpload_DownloadUrl_SlugifiesAccentsAndSymbols() throws Exception {
+        when(uploader.upload(any(byte[].class), anyMap()))
+                .thenReturn(Map.of(
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/accented.pdf",
+                        "public_id", "accented-public-id"));
+
+        Long studentId = createStudent();
+
+        mockMvc.perform(multipart("/api/admin/materials")
+                .file(samplePdf())
+                .param("title", "Tarea de Matemáticas: página 5")
+                .param("studentId", String.valueOf(studentId))
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.downloadUrl").value(
+                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Tarea_de_Matematicas_pagina_5.pdf/accented.pdf"));
     }
 
     @Test
@@ -118,7 +140,7 @@ class MaterialControllerTest {
     void testGetAll_ReturnsOk() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/reading-guide.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/reading-guide.pdf",
                         "public_id", "reading-guide-public-id"));
 
         Long studentId = createStudent();
@@ -141,7 +163,7 @@ class MaterialControllerTest {
     void testGetById_ReturnsOk() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/retrieve.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/retrieve.pdf",
                         "public_id", "retrieve-public-id"));
 
         Long studentId = createStudent();
@@ -180,7 +202,7 @@ class MaterialControllerTest {
     void testUpdateDetails_ReturnsOkWithNewTitle() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/typo.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/typo.pdf",
                         "public_id", "typo-public-id"));
 
         Long studentId = createStudent();
@@ -221,7 +243,7 @@ class MaterialControllerTest {
     void testDelete_ThenGetReturnsNotFound() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/temp.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/temp.pdf",
                         "public_id", "temp-public-id"));
 
         Long studentId = createStudent();
@@ -282,7 +304,7 @@ class MaterialControllerTest {
     void testDelete_CloudinaryFailure_ReturnsBadGateway() throws Exception {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
-                        "secure_url", "https://res.cloudinary.com/demo/delete-failure.pdf",
+                        "secure_url", "https://res.cloudinary.com/demo/raw/upload/delete-failure.pdf",
                         "public_id", "delete-failure-public-id"));
 
         Long studentId = createStudent();
