@@ -1,6 +1,7 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,6 @@ public class MaterialService {
         Material material = findMaterialOrThrow(id);
         material.setTitle(request.title());
         material.setDescription(request.description());
-
         Material updatedMaterial = materialRepository.save(material);
         return toResponse(updatedMaterial);
     }
@@ -74,17 +74,9 @@ public class MaterialService {
         materialRepository.delete(material);
     }
 
-    // El SDK de Cloudinary devuelve un Map sin parametrizar (una limitacion de
-    // su propia API, no nuestra). Se hace el cast explicito a Map<String, Object>
-    // -sabemos por la documentacion de Cloudinary que las claves son siempre
-    // texto- y se silencia el aviso del compilador justo aqui, en el unico
-    // punto donde es inevitable, para que el resto del codigo ya trabaje con
-    // el tipo parametrizado
     @SuppressWarnings("unchecked")
     private Map<String, Object> uploadToCloudinary(MultipartFile file) {
         try {
-            // "resource_type: raw" es el que usa Cloudinary para archivos que no
-            // son ni imagen ni video, como un PDF
             return (Map<String, Object>) cloudinary.uploader()
                 .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "raw"));
         } catch (IOException ex) {
@@ -101,25 +93,48 @@ public class MaterialService {
     }
 
     private Material findMaterialOrThrow(Long id) {
-        return materialRepository.findById(id)
-            .orElseThrow(() -> new MaterialNotFoundException(id));
+        return materialRepository.findById(id).orElseThrow(() -> new MaterialNotFoundException(id));
     }
 
     private Student findStudentOrThrow(Long studentId) {
-        return studentRepository.findById(studentId)
-            .orElseThrow(() -> new StudentNotFoundException(studentId));
+        return studentRepository.findById(studentId).orElseThrow(() -> new StudentNotFoundException(studentId));
     }
 
     private MaterialResponse toResponse(Material material) {
         Student student = material.getStudent();
-
         return new MaterialResponse(
             material.getId(),
             material.getTitle(),
             material.getDescription(),
             material.getFileUrl(),
+            buildDownloadUrl(material),
             material.getUploadedAt(),
             student.getId(),
             student.getFirstName() + " " + student.getLastName());
+    }
+
+    // Cloudinary guarda los PDF con un "public_id" aleatorio (por ejemplo
+    // "x7f3a9b2c1"), sin relación con el título ni con extensión ".pdf". Esta
+    // URL de descarga inserta la bandera "fl_attachment:<nombre>" justo
+    // después de "/upload/" en la URL ya guardada, para que el navegador
+    // descargue el archivo usando el título del material como nombre y con
+    // la extensión correcta, en vez del identificador interno de Cloudinary
+    private String buildDownloadUrl(Material material) {
+        String fileName = slugify(material.getTitle()) + ".pdf";
+        return material.getFileUrl().replace("/upload/", "/upload/fl_attachment:" + fileName + "/");
+    }
+
+    // Convierte el título en un nombre de archivo seguro para una URL:
+    // separa las letras de sus tildes/diéresis (normalización NFD) y
+    // descarta esas marcas, sustituye cualquier carácter que no sea letra o
+    // número por un guion bajo, y limpia los guiones bajos sobrantes al
+    // principio o al final
+    private String slugify(String title) {
+        String withoutAccents = Normalizer.normalize(title, Normalizer.Form.NFD)
+            .replaceAll("[\\p{M}]", "");
+
+        return withoutAccents
+            .replaceAll("[^a-zA-Z0-9]+", "_")
+            .replaceAll("^_+|_+$", "");
     }
 }
