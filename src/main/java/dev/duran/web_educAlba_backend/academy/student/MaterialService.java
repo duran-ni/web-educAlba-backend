@@ -74,11 +74,15 @@ public class MaterialService {
         materialRepository.delete(material);
     }
 
+    // Se indica explícitamente "format: pdf" para que Cloudinary registre el
+    // recurso con esa extensión real; sin esto, un recurso "raw" se guarda
+    // sin ningún formato asociado y no hay extensión de la que tirar al
+    // generar la URL de descarga
     @SuppressWarnings("unchecked")
     private Map<String, Object> uploadToCloudinary(MultipartFile file) {
         try {
             return (Map<String, Object>) cloudinary.uploader()
-                .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "raw"));
+                .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "raw", "format", "pdf"));
         } catch (IOException ex) {
             throw new MaterialUploadException("subir", ex);
         }
@@ -113,14 +117,14 @@ public class MaterialService {
             student.getFirstName() + " " + student.getLastName());
     }
 
-    // Cloudinary guarda los PDF con un "public_id" aleatorio (por ejemplo
-    // "x7f3a9b2c1"), sin relación con el título ni con extensión ".pdf". Esta
-    // URL de descarga inserta la bandera "fl_attachment:<nombre>" justo
-    // después de "/upload/" en la URL ya guardada, para que el navegador
-    // descargue el archivo usando el título del material como nombre y con
-    // la extensión correcta, en vez del identificador interno de Cloudinary
+    // El nombre que le pasamos a "fl_attachment" va SIN extensión: Cloudinary
+    // añade automáticamente la extensión real del recurso (su "format", que
+    // ahora sí registramos al subir) al nombre sugerido de descarga. Meter
+    // la extensión aquí dentro provoca que Cloudinary interprete mal la URL
+    // (el punto se trata como un separador y lo que viene después se
+    // interpreta como otro flag, lo que devuelve un error 400)
     private String buildDownloadUrl(Material material) {
-        String fileName = slugify(material.getTitle()) + ".pdf";
+        String fileName = slugify(material.getTitle());
         return material.getFileUrl().replace("/upload/", "/upload/fl_attachment:" + fileName + "/");
     }
 
