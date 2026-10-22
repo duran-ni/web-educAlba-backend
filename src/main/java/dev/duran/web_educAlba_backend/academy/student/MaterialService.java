@@ -42,7 +42,7 @@ public class MaterialService {
     @Transactional
     public MaterialResponse upload(MultipartFile file, String title, String description, Long studentId) {
         Student student = findStudentOrThrow(studentId);
-        Map uploadResult = uploadToCloudinary(file);
+        Map<String, Object> uploadResult = uploadToCloudinary(file);
 
         Material material = Material.builder()
             .title(title)
@@ -74,11 +74,19 @@ public class MaterialService {
         materialRepository.delete(material);
     }
 
-    private Map uploadToCloudinary(MultipartFile file) {
+    // El SDK de Cloudinary devuelve un Map sin parametrizar (una limitacion de
+    // su propia API, no nuestra). Se hace el cast explicito a Map<String, Object>
+    // -sabemos por la documentacion de Cloudinary que las claves son siempre
+    // texto- y se silencia el aviso del compilador justo aqui, en el unico
+    // punto donde es inevitable, para que el resto del codigo ya trabaje con
+    // el tipo parametrizado
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> uploadToCloudinary(MultipartFile file) {
         try {
             // "resource_type: raw" es el que usa Cloudinary para archivos que no
             // son ni imagen ni video, como un PDF
-            return cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "raw"));
+            return (Map<String, Object>) cloudinary.uploader()
+                .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "raw"));
         } catch (IOException ex) {
             throw new MaterialUploadException("subir", ex);
         }
