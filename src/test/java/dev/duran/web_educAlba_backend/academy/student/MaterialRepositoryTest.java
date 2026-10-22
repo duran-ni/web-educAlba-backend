@@ -2,6 +2,7 @@ package dev.duran.web_educAlba_backend.academy.student;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -25,21 +26,31 @@ class MaterialRepositoryTest {
     private MaterialRepository materialRepository;
 
     @Test
-    void findsMaterialsOfAStudent() {
+    void findsMaterialsOfAStudent_OrderedFromMostRecent() {
         Student student = Student.builder().firstName("Lucía").build();
         entityManager.persistAndFlush(student);
 
-        Material material = Material.builder()
-            .name("Ficha de refuerzo - Sumas")
-            .subject("Matemáticas")
-            .fileSize(1024L)
-            .filePath("/materiales/sumas.pdf")
+        Material olderMaterial = Material.builder()
+            .title("Ficha de refuerzo - Sumas")
+            .description("Resuelve los ejercicios 1 al 5")
+            .fileUrl("https://res.cloudinary.com/demo/sumas.pdf")
+            .publicId("sumas-public-id")
+            .uploadedAt(LocalDateTime.now().minusDays(1))
             .student(student)
             .build();
-        entityManager.persistAndFlush(material);
+        entityManager.persistAndFlush(olderMaterial);
 
-        List<Material> result = materialRepository.findByStudentId(student.getId());
+        Material newerMaterial = Material.builder()
+            .title("Ficha de refuerzo - Restas")
+            .fileUrl("https://res.cloudinary.com/demo/restas.pdf")
+            .publicId("restas-public-id")
+            .uploadedAt(LocalDateTime.now())
+            .student(student)
+            .build();
+        entityManager.persistAndFlush(newerMaterial);
 
-        assertThat(result).containsExactly(material);
+        List<Material> result = materialRepository.findByStudentIdOrderByUploadedAtDesc(student.getId());
+
+        assertThat(result).containsExactly(newerMaterial, olderMaterial);
     }
 }
