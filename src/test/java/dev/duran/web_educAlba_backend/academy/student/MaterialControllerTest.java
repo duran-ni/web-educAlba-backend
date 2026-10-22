@@ -111,7 +111,7 @@ class MaterialControllerTest {
                 .andExpect(jsonPath("$.title").value("Worksheet 1"))
                 .andExpect(jsonPath("$.fileUrl").value("https://res.cloudinary.com/demo/raw/upload/worksheet.pdf"))
                 .andExpect(jsonPath("$.downloadUrl").value(
-                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1.pdf/worksheet.pdf"))
+                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1/worksheet.pdf"))
                 .andExpect(jsonPath("$.studentFullName").value("Carlos Diaz"));
     }
 
@@ -132,7 +132,7 @@ class MaterialControllerTest {
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.downloadUrl").value(
-                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Tarea_de_Matematicas_pagina_5.pdf/accented.pdf"));
+                        "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Tarea_de_Matematicas_pagina_5/accented.pdf"));
     }
 
     @Test
