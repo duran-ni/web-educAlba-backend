@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,13 +30,20 @@ public class Material {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String subject;
-    private Long fileSize;
-    private String filePath;
+    private String title;
+
+    private String description;
+
+    // URL segura (https://) que devuelve Cloudinary tras subir el PDF
+    private String fileUrl;
+
+    // Identificador interno de Cloudinary para este PDF, necesario para
+    // poder borrarlo de Cloudinary cuando se elimine desde el admin
+    private String publicId;
+
+    private LocalDateTime uploadedAt;
 
     @ManyToOne
-    @JoinColumn (name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
-
 }
