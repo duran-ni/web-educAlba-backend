@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/materials")
@@ -36,14 +36,18 @@ public class MaterialController {
     }
 
     @PostMapping
-    public ResponseEntity<MaterialResponse> create(@Valid @RequestBody MaterialRequest request) {
-        MaterialResponse response = materialService.create(request);
+    public ResponseEntity<MaterialResponse> upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam("studentId") Long studentId) {
+        MaterialResponse response = materialService.upload(file, title, description, studentId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public MaterialResponse update(@PathVariable Long id, @Valid @RequestBody MaterialRequest request) {
-        return materialService.update(id, request);
+    public MaterialResponse updateDetails(@PathVariable Long id, @RequestBody MaterialDetailsRequest request) {
+        return materialService.updateDetails(id, request);
     }
 
     @DeleteMapping("/{id}")
