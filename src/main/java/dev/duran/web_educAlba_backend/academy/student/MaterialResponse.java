@@ -8,6 +8,7 @@ public record MaterialResponse(
     String description,
     String fileUrl,
     String downloadUrl,
+    Long fileSizeBytes,
     LocalDateTime uploadedAt,
     Long studentId,
     String studentFullName
