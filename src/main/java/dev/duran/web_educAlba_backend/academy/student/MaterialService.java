@@ -40,6 +40,17 @@ public class MaterialService {
         return toResponse(material);
     }
 
+    // Materiales de un alumno concreto, ya convertidos a MaterialResponse.
+    // La usa UserDashboardService para el listado "Mis fichas y materiales"
+    // del alumno/familia, reutilizando el mismo mapeo (incluida la
+    // downloadUrl) que ya usa el panel de administracion
+    @Transactional(readOnly = true)
+    public List<MaterialResponse> getByStudentId(Long studentId) {
+        return materialRepository.findByStudentIdOrderByUploadedAtDesc(studentId).stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
     @Transactional
     public MaterialResponse upload(MultipartFile file, String title, String description, Long studentId) {
         Student student = findStudentOrThrow(studentId);
@@ -50,6 +61,7 @@ public class MaterialService {
             .description(description)
             .fileUrl((String) uploadResult.get("secure_url"))
             .publicId((String) uploadResult.get("public_id"))
+            .fileSizeBytes(((Number) uploadResult.get("bytes")).longValue())
             .uploadedAt(LocalDateTime.now())
             .student(student)
             .build();
@@ -112,6 +124,7 @@ public class MaterialService {
             material.getDescription(),
             material.getFileUrl(),
             buildDownloadUrl(material),
+            material.getFileSizeBytes(),
             material.getUploadedAt(),
             student.getId(),
             student.getFirstName() + " " + student.getLastName());
