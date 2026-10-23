@@ -97,7 +97,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/worksheet.pdf",
-                        "public_id", "worksheet-public-id"));
+                        "public_id", "worksheet-public-id",
+                        "bytes", 245_760));
 
         Long studentId = createStudent();
 
@@ -112,6 +113,7 @@ class MaterialControllerTest {
                 .andExpect(jsonPath("$.fileUrl").value("https://res.cloudinary.com/demo/raw/upload/worksheet.pdf"))
                 .andExpect(jsonPath("$.downloadUrl").value(
                         "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1/worksheet.pdf"))
+                .andExpect(jsonPath("$.fileSizeBytes").value(245_760))
                 .andExpect(jsonPath("$.studentFullName").value("Carlos Diaz"));
     }
 
@@ -121,7 +123,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/accented.pdf",
-                        "public_id", "accented-public-id"));
+                        "public_id", "accented-public-id",
+                        "bytes", 18_000));
 
         Long studentId = createStudent();
 
@@ -141,7 +144,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/reading-guide.pdf",
-                        "public_id", "reading-guide-public-id"));
+                        "public_id", "reading-guide-public-id",
+                        "bytes", 102_400));
 
         Long studentId = createStudent();
 
@@ -164,7 +168,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/retrieve.pdf",
-                        "public_id", "retrieve-public-id"));
+                        "public_id", "retrieve-public-id",
+                        "bytes", 51_200));
 
         Long studentId = createStudent();
 
@@ -203,7 +208,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/typo.pdf",
-                        "public_id", "typo-public-id"));
+                        "public_id", "typo-public-id",
+                        "bytes", 20_480));
 
         Long studentId = createStudent();
 
@@ -244,7 +250,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/temp.pdf",
-                        "public_id", "temp-public-id"));
+                        "public_id", "temp-public-id",
+                        "bytes", 15_360));
 
         Long studentId = createStudent();
 
@@ -305,7 +312,8 @@ class MaterialControllerTest {
         when(uploader.upload(any(byte[].class), anyMap()))
                 .thenReturn(Map.of(
                         "secure_url", "https://res.cloudinary.com/demo/raw/upload/delete-failure.pdf",
-                        "public_id", "delete-failure-public-id"));
+                        "public_id", "delete-failure-public-id",
+                        "bytes", 30_720));
 
         Long studentId = createStudent();
 
