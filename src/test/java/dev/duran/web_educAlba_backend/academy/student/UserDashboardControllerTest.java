@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Base64;
 
@@ -54,6 +55,9 @@ class UserDashboardControllerTest {
 
     @Autowired
     EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    MaterialRepository materialRepository;
 
     MockMvc mockMvc;
 
@@ -124,6 +128,40 @@ class UserDashboardControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].workshopName").value("Robótica"))
             .andExpect(jsonPath("$[0].progress").value("iniciado"));
+    }
+
+    @Test
+    @DisplayName("A logged in user with no materials gets an empty materials list")
+    void testGetMyMaterials_NoMaterials_ReturnsEmptyList() throws Exception {
+        mockMvc.perform(get("/api/dashboard/my-materials")
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @DisplayName("A logged in user gets the materials uploaded for their own student")
+    void testGetMyMaterials_ReturnsOk() throws Exception {
+        Long userId = userRepository.findByEmail(email).orElseThrow().getId();
+        Student student = studentRepository.findByUser_Id(userId).orElseThrow();
+
+        materialRepository.save(Material.builder()
+            .title("Worksheet 1")
+            .description("Ejercicios 1 y 2")
+            .fileUrl("https://res.cloudinary.com/demo/raw/upload/worksheet.pdf")
+            .publicId("worksheet-public-id")
+            .fileSizeBytes(245_760L)
+            .uploadedAt(LocalDateTime.now())
+            .student(student)
+            .build());
+
+        mockMvc.perform(get("/api/dashboard/my-materials")
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].title").value("Worksheet 1"))
+            .andExpect(jsonPath("$[0].fileSizeBytes").value(245_760))
+            .andExpect(jsonPath("$[0].downloadUrl").value(
+                "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1/worksheet.pdf"));
     }
 
     @Test
