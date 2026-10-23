@@ -31,4 +31,9 @@ public class UserDashboardController {
     public List<MyWorkshopResponse> getMyWorkshops(@AuthenticationPrincipal SecurityUser securityUser) {
         return userDashboardService.getMyWorkshops(securityUser.getUser().getId());
     }
+
+    @GetMapping("/my-materials")
+    public List<MaterialResponse> getMyMaterials(@AuthenticationPrincipal SecurityUser securityUser) {
+        return userDashboardService.getMyMaterials(securityUser.getUser().getId());
+    }
 }
