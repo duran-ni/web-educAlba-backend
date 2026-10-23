@@ -41,6 +41,11 @@ public class Material {
     // poder borrarlo de Cloudinary cuando se elimine desde el admin
     private String publicId;
 
+    // Tamaño del archivo en bytes, tal como lo devuelve Cloudinary en la
+    // subida ("bytes"); se usa para mostrarlo formateado (ej. "240 KB") en
+    // el listado de materiales del alumno/familia
+    private Long fileSizeBytes;
+
     private LocalDateTime uploadedAt;
 
     @ManyToOne
