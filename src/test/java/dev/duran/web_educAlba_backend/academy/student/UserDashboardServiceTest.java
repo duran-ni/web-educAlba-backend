@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +28,15 @@ class UserDashboardServiceTest {
     @Mock
     private EnrollmentRepository enrollmentRepository;
 
+    @Mock
+    private MaterialService materialService;
+
     @Test
     void returnsTheProfileOfTheStudentLinkedToTheUser() {
         Student student = Student.builder().id(1L).firstName("Lucía").lastName("García").build();
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository);
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
         StudentResponse result = service.getMyProfile(10L);
 
         assertThat(result.firstName()).isEqualTo("Lucía");
@@ -42,7 +46,7 @@ class UserDashboardServiceTest {
     void throwsWhenNoStudentIsLinkedToTheUser() {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.empty());
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository);
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
 
         assertThatThrownBy(() -> service.getMyProfile(10L))
             .isInstanceOf(IllegalStateException.class);
@@ -57,7 +61,7 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(1L)).thenReturn(List.of(enrollment));
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository);
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
         List<MyWorkshopResponse> result = service.getMyWorkshops(10L);
 
         assertThat(result).hasSize(1);
@@ -71,8 +75,40 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(1L)).thenReturn(List.of());
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository);
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
         List<MyWorkshopResponse> result = service.getMyWorkshops(10L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void returnsTheMaterialsOfTheStudentLinkedToTheUser() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        MaterialResponse material = new MaterialResponse(
+            100L, "Worksheet 1", "Ejercicios 1 y 2",
+            "https://res.cloudinary.com/demo/raw/upload/worksheet.pdf",
+            "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1/worksheet.pdf",
+            245_760L, LocalDateTime.of(2026, 10, 22, 9, 0), 1L, "Lucía García");
+
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(materialService.getByStudentId(1L)).thenReturn(List.of(material));
+
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        List<MaterialResponse> result = service.getMyMaterials(10L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).title()).isEqualTo("Worksheet 1");
+        assertThat(result.get(0).fileSizeBytes()).isEqualTo(245_760L);
+    }
+
+    @Test
+    void returnsAnEmptyListWhenTheStudentHasNoMaterials() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(materialService.getByStudentId(1L)).thenReturn(List.of());
+
+        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        List<MaterialResponse> result = service.getMyMaterials(10L);
 
         assertThat(result).isEmpty();
     }
