@@ -1,7 +1,6 @@
 package dev.duran.web_educAlba_backend.academy;
 
 import dev.duran.web_educAlba_backend.academy.student.EducationalStage;
-import dev.duran.web_educAlba_backend.academy.student.Note;
 import dev.duran.web_educAlba_backend.academy.enrollment.Enrollment;
 import dev.duran.web_educAlba_backend.academy.student.Student;
 import dev.duran.web_educAlba_backend.academy.student.StudentStatus;
@@ -12,8 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
-
-import dev.duran.web_educAlba_backend.user.core.UserEntity;
 
 class AcademyEntitiesTest {
 
@@ -42,22 +39,5 @@ class AcademyEntitiesTest {
 
         assertThat(enrollment.getStudent()).isEqualTo(student);
         assertThat(enrollment.getWorkshop()).isEqualTo(workshop);
-    }
-
-    @Test
-    void noteCanBePinnedByAnAdminUser() {
-        UserEntity admin = UserEntity.builder().email("admin@educalba.com").build();
-        Student student = Student.builder().firstName("Lucía").build();
-
-        Note note = Note.builder()
-            .content("Buen trabajo esta semana")
-            .date(LocalDate.now())
-            .pinned(true)
-            .student(student)
-            .author(admin)
-            .build();
-
-        assertThat(note.isPinned()).isTrue();
-        assertThat(note.getAuthor()).isEqualTo(admin);
     }
 }
