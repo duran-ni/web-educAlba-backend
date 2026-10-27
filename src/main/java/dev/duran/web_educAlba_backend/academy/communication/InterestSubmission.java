@@ -30,5 +30,6 @@ public class InterestSubmission {
 
     private String studentName;
     private String courseToReinforce;
+    private String phone;
     private LocalDateTime submittedAt;
 }
