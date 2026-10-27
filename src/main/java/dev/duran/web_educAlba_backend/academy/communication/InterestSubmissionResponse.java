@@ -7,6 +7,7 @@ public record InterestSubmissionResponse(
     Long id,
     String studentName,
     String courseToReinforce,
+    String phone,
     LocalDateTime submittedAt
 ) {
 
