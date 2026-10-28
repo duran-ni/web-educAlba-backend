@@ -32,4 +32,8 @@ public class InterestSubmission {
     private String courseToReinforce;
     private String phone;
     private LocalDateTime submittedAt;
+
+    // true: la administradora ya ha revisado y gestionado esta solicitud
+    @Builder.Default
+    private boolean reviewed = false;
 }
