@@ -27,4 +27,9 @@ public class InterestSubmissionAdminController {
     public InterestSubmissionResponse markReviewed(@PathVariable Long id) {
         return interestSubmissionService.markReviewed(id);
     }
+
+    @PutMapping("/{id}/closed")
+    public InterestSubmissionResponse markClosed(@PathVariable Long id) {
+        return interestSubmissionService.markClosed(id);
+    }
 }
