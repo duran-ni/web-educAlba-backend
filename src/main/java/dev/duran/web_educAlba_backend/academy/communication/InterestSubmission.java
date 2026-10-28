@@ -37,8 +37,15 @@ public class InterestSubmission {
     // true: la administradora ya ha revisado y gestionado esta solicitud.
     // columnDefinition fuerza un valor por defecto a nivel de base de datos,
     // necesario para que Hibernate pueda anadir esta columna NOT NULL a una
-    // tabla que ya tenia filas guardadas de antes de este cambio
+    // tabla que ya tenía filas guardadas de antes de este cambio
     @Column(columnDefinition = "boolean not null default false")
     @Builder.Default
     private boolean reviewed = false;
+
+    // true: el ciclo con esta familia ya está cerrado (se ha apuntado a
+    // clases de refuerzo o no se ha llegado a un acuerdo). Una vez cerrada,
+    // la solicitud deja de aparecer en el listado del panel de Admin
+    @Column(columnDefinition = "boolean not null default false")
+    @Builder.Default
+    private boolean closed = false;
 }
