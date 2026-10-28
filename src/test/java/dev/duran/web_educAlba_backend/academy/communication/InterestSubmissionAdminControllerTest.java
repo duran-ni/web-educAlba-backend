@@ -97,6 +97,47 @@ class InterestSubmissionAdminControllerTest {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("An admin can close an interest submission")
+    void testMarkClosed_UpdatesClosedFlag() throws Exception {
+        Long id = createInterestSubmission("Sofía Díaz", "Inglés 4º Primaria", "612345680");
+
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/closed", id)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(id));
+    }
+
+    @Test
+    @DisplayName("Closing an unknown interest submission returns not found")
+    void testMarkClosed_UnknownId_ReturnsNotFound() throws Exception {
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/closed", Long.MAX_VALUE)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("A closed interest submission no longer appears in the admin listing")
+    void testGetAll_ExcludesClosedSubmissions() throws Exception {
+        Long id = createInterestSubmission("Pablo Ortiz", "Física y Química 4º ESO", "612345681");
+
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/closed", id)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isOk());
+
+        String body = mockMvc.perform(get("/api/admin/interest-submissions")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        List<InterestSubmissionResponse> submissions = mapper.readValue(
+            body, mapper.getTypeFactory().constructCollectionType(List.class, InterestSubmissionResponse.class));
+
+        assertThat(submissions).noneMatch(submission -> submission.id().equals(id));
+    }
+
     private Long createInterestSubmission(String studentName, String courseToReinforce, String phone) throws Exception {
         InterestSubmissionRequest request = new InterestSubmissionRequest(studentName, courseToReinforce, phone);
 
