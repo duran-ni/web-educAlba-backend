@@ -58,7 +58,8 @@ class InterestSubmissionControllerTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.studentName").value("Juanito"))
             .andExpect(jsonPath("$.courseToReinforce").value("Matemáticas 2º ESO"))
-            .andExpect(jsonPath("$.phone").value("612345678"));
+            .andExpect(jsonPath("$.phone").value("612345678"))
+            .andExpect(jsonPath("$.reviewed").value(false));
 
         verify(javaMailSender).send((SimpleMailMessage) org.mockito.ArgumentMatchers.any());
     }
