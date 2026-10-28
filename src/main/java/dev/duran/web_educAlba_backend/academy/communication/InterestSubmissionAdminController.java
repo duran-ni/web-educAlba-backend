@@ -28,6 +28,11 @@ public class InterestSubmissionAdminController {
         return interestSubmissionService.markReviewed(id);
     }
 
+    @PutMapping("/{id}/unreviewed")
+    public InterestSubmissionResponse markUnreviewed(@PathVariable Long id) {
+        return interestSubmissionService.markUnreviewed(id);
+    }
+
     @PutMapping("/{id}/closed")
     public InterestSubmissionResponse markClosed(@PathVariable Long id) {
         return interestSubmissionService.markClosed(id);
