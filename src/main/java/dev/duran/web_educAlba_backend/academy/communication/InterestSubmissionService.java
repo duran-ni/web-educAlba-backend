@@ -66,6 +66,19 @@ public class InterestSubmissionService {
         return toResponse(savedInterestSubmission);
     }
 
+    // Deshace el marcado como revisada, por si la administradora se ha
+    // equivocado al pulsar el boton; vuelve a contar como pendiente en el KPI
+    @Transactional
+    public InterestSubmissionResponse markUnreviewed(Long id) {
+        InterestSubmission interestSubmission = interestSubmissionRepository.findById(id)
+            .orElseThrow(() -> new InterestSubmissionNotFoundException(id));
+
+        interestSubmission.setReviewed(false);
+        InterestSubmission savedInterestSubmission = interestSubmissionRepository.save(interestSubmission);
+        dashboardEventsService.notifyChange();
+        return toResponse(savedInterestSubmission);
+    }
+
     // Marca la solicitud como cerrada: el ciclo con esta familia ha terminado
     // (se ha apuntado a clases de refuerzo o no se ha llegado a un acuerdo),
     // y a partir de ahora deja de aparecer en el listado del panel de Admin
