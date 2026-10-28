@@ -50,7 +50,7 @@ public class InterestSubmissionService {
 
     @Transactional(readOnly = true)
     public List<InterestSubmissionResponse> getAll() {
-        return interestSubmissionRepository.findAllByOrderBySubmittedAtDesc().stream()
+        return interestSubmissionRepository.findAllByClosedFalseOrderBySubmittedAtDesc().stream()
             .map(this::toResponse)
             .toList();
     }
@@ -63,6 +63,19 @@ public class InterestSubmissionService {
         interestSubmission.setReviewed(true);
         InterestSubmission savedInterestSubmission = interestSubmissionRepository.save(interestSubmission);
         dashboardEventsService.notifyChange();
+        return toResponse(savedInterestSubmission);
+    }
+
+    // Marca la solicitud como cerrada: el ciclo con esta familia ha terminado
+    // (se ha apuntado a clases de refuerzo o no se ha llegado a un acuerdo),
+    // y a partir de ahora deja de aparecer en el listado del panel de Admin
+    @Transactional
+    public InterestSubmissionResponse markClosed(Long id) {
+        InterestSubmission interestSubmission = interestSubmissionRepository.findById(id)
+            .orElseThrow(() -> new InterestSubmissionNotFoundException(id));
+
+        interestSubmission.setClosed(true);
+        InterestSubmission savedInterestSubmission = interestSubmissionRepository.save(interestSubmission);
         return toResponse(savedInterestSubmission);
     }
 
