@@ -5,7 +5,9 @@ public record DashboardSummaryResponse(
 
     long totalEnrolledStudents,
 
-    long totalActiveWorkshops
+    long totalActiveWorkshops,
+
+    long pendingInterestSubmissions
 ) {
 
 }
