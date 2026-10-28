@@ -1,5 +1,6 @@
 package dev.duran.web_educAlba_backend.academy.dashboard;
 
+import dev.duran.web_educAlba_backend.academy.communication.InterestSubmissionRequest;
 import dev.duran.web_educAlba_backend.academy.enrollment.PublicEnrollmentRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
@@ -22,7 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -43,6 +46,12 @@ class DashboardControllerTest {
     @Autowired
     ObjectMapper mapper;
 
+    // Sustituye al JavaMailSender real por un doble de prueba: crear una
+    // solicitud de interés para probar el contador dispara el envío de
+    // correo, y no se quiere enviar emails de verdad al ejecutar los tests
+    @MockitoBean
+    JavaMailSender javaMailSender;
+
     MockMvc mockMvc;
 
     @BeforeEach
@@ -55,7 +64,7 @@ class DashboardControllerTest {
     @Test
     @DisplayName("The summary reflects active workshops and distinct enrolled students")
     void testGetSummary_ReflectsActiveWorkshopsAndDistinctEnrolledStudents() throws Exception {
-        // Se compara el resumen antes y despues, en vez de un numero fijo,
+        // Se compara el resumen antes y después, en vez de un número fijo,
         // porque la base de datos de test es compartida con el resto de tests
         // y puede contener ya datos de otras clases
         DashboardSummaryResponse before = fetchSummary();
@@ -73,6 +82,18 @@ class DashboardControllerTest {
 
         assertThat(after.totalActiveWorkshops() - before.totalActiveWorkshops()).isEqualTo(2);
         assertThat(after.totalEnrolledStudents() - before.totalEnrolledStudents()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("The summary reflects pending interest submissions")
+    void testGetSummary_ReflectsPendingInterestSubmissions() throws Exception {
+        DashboardSummaryResponse before = fetchSummary();
+
+        submitInterest("Ana Torres", "Inglés 1º ESO", "612345670");
+
+        DashboardSummaryResponse after = fetchSummary();
+
+        assertThat(after.pendingInterestSubmissions() - before.pendingInterestSubmissions()).isEqualTo(1);
     }
 
     private DashboardSummaryResponse fetchSummary() throws Exception {
@@ -106,6 +127,15 @@ class DashboardControllerTest {
         PublicEnrollmentRequest request = new PublicEnrollmentRequest(studentName, 10, "612345678", workshopIds);
 
         mockMvc.perform(post("/api/public/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+
+    private void submitInterest(String studentName, String courseToReinforce, String phone) throws Exception {
+        InterestSubmissionRequest request = new InterestSubmissionRequest(studentName, courseToReinforce, phone);
+
+        mockMvc.perform(post("/api/public/interest-submissions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
