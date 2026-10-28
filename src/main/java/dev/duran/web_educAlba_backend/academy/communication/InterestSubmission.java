@@ -2,6 +2,7 @@ package dev.duran.web_educAlba_backend.academy.communication;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,7 +34,11 @@ public class InterestSubmission {
     private String phone;
     private LocalDateTime submittedAt;
 
-    // true: la administradora ya ha revisado y gestionado esta solicitud
+    // true: la administradora ya ha revisado y gestionado esta solicitud.
+    // columnDefinition fuerza un valor por defecto a nivel de base de datos,
+    // necesario para que Hibernate pueda anadir esta columna NOT NULL a una
+    // tabla que ya tenia filas guardadas de antes de este cambio
+    @Column(columnDefinition = "boolean not null default false")
     @Builder.Default
     private boolean reviewed = false;
 }
