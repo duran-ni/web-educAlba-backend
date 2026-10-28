@@ -98,6 +98,30 @@ class InterestSubmissionAdminControllerTest {
     }
 
     @Test
+    @DisplayName("An admin can undo marking an interest submission as reviewed")
+    void testMarkUnreviewed_UpdatesReviewedFlag() throws Exception {
+        Long id = createInterestSubmission("Elena Castro", "Historia 1º ESO", "612345682");
+
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/reviewed", id)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/unreviewed", id)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(id))
+            .andExpect(jsonPath("$.reviewed").value(false));
+    }
+
+    @Test
+    @DisplayName("Marking an unknown interest submission as unreviewed returns not found")
+    void testMarkUnreviewed_UnknownId_ReturnsNotFound() throws Exception {
+        mockMvc.perform(put("/api/admin/interest-submissions/{id}/unreviewed", Long.MAX_VALUE)
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("An admin can close an interest submission")
     void testMarkClosed_UpdatesClosedFlag() throws Exception {
         Long id = createInterestSubmission("Sofía Díaz", "Inglés 4º Primaria", "612345680");
