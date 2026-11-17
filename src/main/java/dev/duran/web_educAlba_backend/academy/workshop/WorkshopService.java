@@ -47,6 +47,7 @@ public class WorkshopService {
                 .recommendedAge(request.recommendedAge())
                 .room(request.room())
                 .active(request.active())
+                .price(request.price())
                 .build();
 
         Workshop savedWorkshop = workshopRepository.save(workshop);
@@ -65,6 +66,7 @@ public class WorkshopService {
         workshop.setRecommendedAge(request.recommendedAge());
         workshop.setRoom(request.room());
         workshop.setActive(request.active());
+        workshop.setPrice(request.price());
 
         Workshop updatedWorkshop = workshopRepository.save(workshop);
         return toResponse(updatedWorkshop);
@@ -96,7 +98,8 @@ public class WorkshopService {
                 workshop.getTime(),
                 workshop.getRecommendedAge(),
                 workshop.getRoom(),
-                workshop.isActive());
+                workshop.isActive(),
+                workshop.getPrice());
     }
 
     @Transactional(readOnly = true)
