@@ -15,4 +15,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     // talleres cuenta una sola vez (ver DISTINCT)
     @Query("SELECT COUNT(DISTINCT e.student.id) FROM Enrollment e")
     long countDistinctStudents();
+
+    // Comprueba si un alumno ya esta inscrito en un taller concreto, para
+    // evitar inscripciones duplicadas cuando el propio usuario se apunta
+    // desde su Dashboard
+    boolean existsByStudentIdAndWorkshopId(Long studentId, Long workshopId);
 }
