@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -115,6 +116,7 @@ class UserDashboardControllerTest {
             .name("Robótica")
             .date(LocalDate.of(2026, 11, 10))
             .time(LocalTime.of(17, 0))
+            .price(BigDecimal.valueOf(30))
             .build());
 
         enrollmentRepository.save(Enrollment.builder()
@@ -127,7 +129,8 @@ class UserDashboardControllerTest {
                 .with(httpBasic(email, PLAIN_PASSWORD)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].workshopName").value("Robótica"))
-            .andExpect(jsonPath("$[0].progress").value("iniciado"));
+            .andExpect(jsonPath("$[0].progress").value("iniciado"))
+            .andExpect(jsonPath("$[0].price").value(30));
     }
 
     @Test
