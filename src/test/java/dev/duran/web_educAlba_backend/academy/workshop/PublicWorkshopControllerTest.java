@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.List;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -53,11 +54,13 @@ class PublicWorkshopControllerTest {
             .name("Robótica Creativa")
             .date(LocalDate.now().plusDays(5))
             .active(true)
+            .price(BigDecimal.valueOf(25))
             .build());
 
         mockMvc.perform(get("/api/public/workshops/next"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("Robótica Creativa"));
+            .andExpect(jsonPath("$.name").value("Robótica Creativa"))
+            .andExpect(jsonPath("$.price").value(25));
     }
 
     @Test
