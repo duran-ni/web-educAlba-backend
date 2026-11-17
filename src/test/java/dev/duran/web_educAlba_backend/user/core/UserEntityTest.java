@@ -13,12 +13,12 @@ class UserEntityTest {
         RoleEntity familiaRole = RoleEntity.builder().name("ALUMNO_FAMILIA").build();
 
         UserEntity user = UserEntity.builder()
-            .email("familia@educalba.com")
+            .email("familia@example.com")
             .password("hashed-password")
             .roles(Set.of(familiaRole))
             .build();
 
-        assertThat(user.getEmail()).isEqualTo("familia@educalba.com");
+        assertThat(user.getEmail()).isEqualTo("familia@example.com");
         assertThat(user.isEnabled()).isTrue();
         assertThat(user.getRoles()).contains(familiaRole);
     }
