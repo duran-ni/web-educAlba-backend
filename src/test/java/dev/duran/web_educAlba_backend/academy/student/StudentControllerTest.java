@@ -4,6 +4,7 @@ import dev.duran.web_educAlba_backend.academy.enrollment.EnrollmentRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -149,7 +150,7 @@ class StudentControllerTest {
     @DisplayName("A student with active enrollments cannot be deleted")
     void testDelete_StudentWithEnrollments_ReturnsConflict() throws Exception {
         WorkshopRequest workshopRequest = new WorkshopRequest("Chess", "Beginner chess club",
-                LocalDate.now().plusDays(8), LocalTime.of(17, 0), "8-14", "Room H", true);
+                LocalDate.now().plusDays(8), LocalTime.of(17, 0), "8-14", "Room H", true, BigDecimal.valueOf(20));
 
         String workshopBody = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
