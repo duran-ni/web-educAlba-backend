@@ -27,12 +27,12 @@ class UserRepositoryTest {
     @Test
     void findsUserByEmail() {
         UserEntity user = UserEntity.builder()
-            .email("familia@educalba.com")
+            .email("familia@example.com")
             .password("hashed-password")
             .build();
         entityManager.persistAndFlush(user);
 
-        Optional<UserEntity> found = userRepository.findByEmail("familia@educalba.com");
+        Optional<UserEntity> found = userRepository.findByEmail("familia@example.com");
 
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo(user.getId());
@@ -40,7 +40,7 @@ class UserRepositoryTest {
 
     @Test
     void returnsEmptyWhenEmailDoesNotExist() {
-        Optional<UserEntity> found = userRepository.findByEmail("no-existe@educalba.com");
+        Optional<UserEntity> found = userRepository.findByEmail("no-existe@example.com");
 
         assertThat(found).isEmpty();
     }
@@ -48,12 +48,12 @@ class UserRepositoryTest {
     @Test
     void existsByEmailReflectsPersistedUsers() {
         UserEntity user = UserEntity.builder()
-            .email("admin@educalba.com")
+            .email("admin@example.com")
             .password("hashed-password")
             .build();
         entityManager.persistAndFlush(user);
 
-        assertThat(userRepository.existsByEmail("admin@educalba.com")).isTrue();
-        assertThat(userRepository.existsByEmail("otro@educalba.com")).isFalse();
+        assertThat(userRepository.existsByEmail("admin@example.com")).isTrue();
+        assertThat(userRepository.existsByEmail("otro@example.com")).isFalse();
     }
 }
