@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -109,7 +110,7 @@ class DashboardControllerTest {
 
     private Long createWorkshop(boolean active) throws Exception {
         WorkshopRequest request = new WorkshopRequest("Taller de prueba", "Descripción", LocalDate.now().plusDays(10),
-                LocalTime.of(10, 0), "6-12", "Sala A", active);
+                LocalTime.of(10, 0), "6-12", "Sala A", active, BigDecimal.valueOf(10));
 
         String body = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
