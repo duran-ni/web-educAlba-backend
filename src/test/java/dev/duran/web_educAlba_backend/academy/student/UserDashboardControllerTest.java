@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -165,6 +166,67 @@ class UserDashboardControllerTest {
             .andExpect(jsonPath("$[0].fileSizeBytes").value(245_760))
             .andExpect(jsonPath("$[0].downloadUrl").value(
                 "https://res.cloudinary.com/demo/raw/upload/fl_attachment:Worksheet_1/worksheet.pdf"));
+    }
+
+    @Test
+    @DisplayName("A logged in user enrolls their own student in an active upcoming workshop")
+    void testEnrollInWorkshop_ReturnsCreated() throws Exception {
+        Workshop workshop = workshopRepository.save(Workshop.builder()
+            .name("Robótica")
+            .date(LocalDate.now().plusDays(3))
+            .time(LocalTime.of(17, 0))
+            .active(true)
+            .price(BigDecimal.valueOf(30))
+            .build());
+
+        mockMvc.perform(post("/api/dashboard/my-workshops/" + workshop.getId())
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.workshopName").value("Robótica"));
+
+        Long userId = userRepository.findByEmail(email).orElseThrow().getId();
+        Student student = studentRepository.findByUser_Id(userId).orElseThrow();
+        assertThat(enrollmentRepository.existsByStudentIdAndWorkshopId(student.getId(), workshop.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Enrolling in a workshop that does not exist returns not found")
+    void testEnrollInWorkshop_WorkshopNotFound_ReturnsNotFound() throws Exception {
+        mockMvc.perform(post("/api/dashboard/my-workshops/999999")
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Enrolling in a workshop whose date has already passed returns not found")
+    void testEnrollInWorkshop_PastWorkshop_ReturnsNotFound() throws Exception {
+        Workshop workshop = workshopRepository.save(Workshop.builder()
+            .name("Ya pasado")
+            .date(LocalDate.now().minusDays(1))
+            .active(true)
+            .build());
+
+        mockMvc.perform(post("/api/dashboard/my-workshops/" + workshop.getId())
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Enrolling twice in the same workshop returns conflict")
+    void testEnrollInWorkshop_AlreadyEnrolled_ReturnsConflict() throws Exception {
+        Workshop workshop = workshopRepository.save(Workshop.builder()
+            .name("Robótica")
+            .date(LocalDate.now().plusDays(3))
+            .active(true)
+            .build());
+
+        mockMvc.perform(post("/api/dashboard/my-workshops/" + workshop.getId())
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/dashboard/my-workshops/" + workshop.getId())
+                .with(httpBasic(email, PLAIN_PASSWORD)))
+            .andExpect(status().isConflict());
     }
 
     @Test
