@@ -8,7 +8,11 @@ import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import dev.duran.web_educAlba_backend.academy.student.Student;
 import dev.duran.web_educAlba_backend.academy.student.StudentNotFoundException;
@@ -22,13 +26,22 @@ public class EnrollmentService {
     private final StudentRepository studentRepository;
     private final WorkshopRepository workshopRepository;
     private final DashboardEventsService dashboardEventsService;
+    private final JavaMailSender javaMailSender;
+    private final String contactRecipient;
+    private final String fromAddress;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository, StudentRepository studentRepository,
-            WorkshopRepository workshopRepository, DashboardEventsService dashboardEventsService) {
+            WorkshopRepository workshopRepository, DashboardEventsService dashboardEventsService,
+            JavaMailSender javaMailSender,
+            @Value("${app.mail.contact-recipient}") String contactRecipient,
+            @Value("${app.mail.from-address}") String fromAddress) {
         this.enrollmentRepository = enrollmentRepository;
         this.studentRepository = studentRepository;
         this.workshopRepository = workshopRepository;
         this.dashboardEventsService = dashboardEventsService;
+        this.javaMailSender = javaMailSender;
+        this.contactRecipient = contactRecipient;
+        this.fromAddress = fromAddress;
     }
 
     @Transactional(readOnly = true)
@@ -109,7 +122,29 @@ public class EnrollmentService {
             .toList();
 
         dashboardEventsService.notifyChange();
+        sendNotificationEmail(savedStudent, responses);
         return responses;
+    }
+
+    // Construye y envia a la academia el correo de aviso de una nueva
+    // inscripcion recibida desde el formulario publico "Apuntate ya", con
+    // los datos de contacto del alumno y los talleres elegidos
+    private void sendNotificationEmail(Student student, List<EnrollmentResponse> responses) {
+        String workshopNames = responses.stream()
+            .map(EnrollmentResponse::workshopName)
+            .collect(Collectors.joining(", "));
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromAddress);
+        mailMessage.setTo(contactRecipient);
+        mailMessage.setSubject("Nueva inscripcion en talleres: " + student.getFirstName());
+        mailMessage.setText(
+            "Nombre del alumno/a: " + student.getFirstName() + "\n"
+                + "Edad: " + student.getAge() + "\n"
+                + "Telefono de contacto: " + student.getPhone() + "\n\n"
+                + "Talleres: " + workshopNames);
+
+        javaMailSender.send(mailMessage);
     }
 
     private Enrollment findEnrollmentOrThrow(Long id) {
