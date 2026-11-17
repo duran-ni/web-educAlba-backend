@@ -27,14 +27,18 @@ class WorkshopRepositoryTest {
     private WorkshopRepository workshopRepository;
 
     @Test
-    void findsOnlyActiveWorkshops() {
-        Workshop active = Workshop.builder().name("Robótica").date(LocalDate.now()).active(true).build();
-        Workshop inactive = Workshop.builder().name("Pintura").date(LocalDate.now()).active(false).build();
+    void findsOnlyActiveWorkshopsFromTodayOnward() {
+        LocalDate today = LocalDate.now();
+        Workshop active = Workshop.builder().name("Robótica").date(today).active(true).build();
+        Workshop inactive = Workshop.builder().name("Pintura").date(today).active(false).build();
+        Workshop pastActive = Workshop.builder().name("Ya pasado").date(today.minusDays(1)).active(true).build();
         entityManager.persistAndFlush(active);
         entityManager.persistAndFlush(inactive);
+        entityManager.persistAndFlush(pastActive);
 
-        List<Workshop> result = workshopRepository.findByActiveTrue();
+        List<Workshop> result = workshopRepository.findByActiveTrueAndDateGreaterThanEqual(today);
 
+        // Ni el inactivo ni el activo cuya fecha ya paso deben aparecer
         assertThat(result).containsExactly(active);
     }
 
