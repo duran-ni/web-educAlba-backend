@@ -71,7 +71,7 @@ class UserDashboardControllerTest {
             .apply(SecurityMockMvcConfigurers.springSecurity())
             .build();
 
-        email = "dashboard" + System.nanoTime() + "@educalba.com";
+        email = "dashboard" + System.nanoTime() + "@example.com";
 
         // RegisterService ya crea el UserEntity con rol FAMILY y el Student
         // (ACTIVE) vinculado a el en la misma transaccion -- no hace falta
