@@ -2,8 +2,12 @@ package dev.duran.web_educAlba_backend.academy.student;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,5 +39,17 @@ public class UserDashboardController {
     @GetMapping("/my-materials")
     public List<MaterialResponse> getMyMaterials(@AuthenticationPrincipal SecurityUser securityUser) {
         return userDashboardService.getMyMaterials(securityUser.getUser().getId());
+    }
+
+    // El propio alumno se apunta a un taller desde su Dashboard (boton
+    // "Apuntarme" en la vista publica de Talleres, visible solo si ha
+    // iniciado sesion), sin tener que rellenar de nuevo el formulario
+    // publico de nombre/edad/telefono
+    @PostMapping("/my-workshops/{workshopId}")
+    public ResponseEntity<MyWorkshopResponse> enrollInWorkshop(@AuthenticationPrincipal SecurityUser securityUser,
+            @PathVariable Long workshopId) {
+        MyWorkshopResponse response = userDashboardService.enrollInWorkshop(securityUser.getUser().getId(),
+                workshopId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
