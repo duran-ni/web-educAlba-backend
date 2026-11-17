@@ -1,5 +1,6 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -11,7 +12,8 @@ public record MyWorkshopResponse(
     String workshopName,
     LocalDate date,
     LocalTime time,
-    String progress
+    String progress,
+    BigDecimal price
 ) {
 
 }
