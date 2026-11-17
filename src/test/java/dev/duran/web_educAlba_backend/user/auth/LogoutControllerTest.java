@@ -28,7 +28,7 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class LogoutControllerTest {
 
-    private static final String EMAIL = "logout@educalba.com";
+    private static final String EMAIL = "logout@example.com";
     private static final String PLAIN_PASSWORD = "ClaveSegura123";
 
     @Autowired
