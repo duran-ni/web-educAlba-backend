@@ -29,7 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthControllerSecurityTest {
 
-    private static final String EMAIL = "security@educalba.com";
+    private static final String EMAIL = "security@example.com";
     private static final String PLAIN_PASSWORD = "ClaveSegura123";
 
     @Autowired
@@ -74,7 +74,7 @@ class AuthControllerSecurityTest {
     @Test
     @DisplayName("Authentication with an email that is not registered returns unauthorized")
     void testMe_UnknownEmail_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/auth/me").with(httpBasic("no-registrado@educalba.com", "CualquierClave123")))
+        mockMvc.perform(get("/api/auth/me").with(httpBasic("no-registrado@example.com", "CualquierClave123")))
                 .andExpect(status().isUnauthorized());
     }
 }
