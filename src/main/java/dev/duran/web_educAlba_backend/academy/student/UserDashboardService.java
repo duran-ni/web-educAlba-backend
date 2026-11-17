@@ -1,13 +1,18 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.duran.web_educAlba_backend.academy.dashboard.DashboardEventsService;
+import dev.duran.web_educAlba_backend.academy.enrollment.AlreadyEnrolledException;
 import dev.duran.web_educAlba_backend.academy.enrollment.Enrollment;
 import dev.duran.web_educAlba_backend.academy.enrollment.EnrollmentRepository;
 import dev.duran.web_educAlba_backend.academy.workshop.Workshop;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopNotFoundException;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRepository;
 
 // Lógica del Dashboard del usuario (familia/alumno): a diferencia de
 // StudentService y EnrollmentService, que gestionan alumnos e inscripciones
@@ -19,13 +24,18 @@ public class UserDashboardService {
 
     private final StudentRepository studentRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final WorkshopRepository workshopRepository;
     private final MaterialService materialService;
+    private final DashboardEventsService dashboardEventsService;
 
     public UserDashboardService(StudentRepository studentRepository, EnrollmentRepository enrollmentRepository,
-            MaterialService materialService) {
+            WorkshopRepository workshopRepository, MaterialService materialService,
+            DashboardEventsService dashboardEventsService) {
         this.studentRepository = studentRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.workshopRepository = workshopRepository;
         this.materialService = materialService;
+        this.dashboardEventsService = dashboardEventsService;
     }
 
     @Transactional(readOnly = true)
@@ -41,6 +51,38 @@ public class UserDashboardService {
         return enrollmentRepository.findByStudentId(student.getId()).stream()
             .map(this::toMyWorkshopResponse)
             .toList();
+    }
+
+    // El propio alumno se inscribe en un taller desde su Dashboard: el
+    // Student siempre se resuelve a partir del userId de la sesion (nunca
+    // se crea un alumno nuevo ni se recibe un studentId en la peticion), asi
+    // que la inscripcion queda vinculada a su cuenta real desde el principio,
+    // a diferencia del formulario publico "Apuntate ya", que crea un alumno
+    // nuevo sin vincular. Solo se permiten talleres activos y aun no pasados,
+    // los mismos que ve en la vista publica de Talleres
+    @Transactional
+    public MyWorkshopResponse enrollInWorkshop(Long userId, Long workshopId) {
+        Student student = findStudentByUserOrThrow(userId);
+        Workshop workshop = workshopRepository.findById(workshopId)
+            .orElseThrow(() -> new WorkshopNotFoundException(workshopId));
+
+        if (!workshop.isActive() || workshop.getDate().isBefore(LocalDate.now())) {
+            throw new WorkshopNotFoundException(workshopId);
+        }
+
+        if (enrollmentRepository.existsByStudentIdAndWorkshopId(student.getId(), workshopId)) {
+            throw new AlreadyEnrolledException(workshopId);
+        }
+
+        Enrollment enrollment = Enrollment.builder()
+            .student(student)
+            .workshop(workshop)
+            .enrollmentDate(LocalDate.now())
+            .build();
+
+        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        dashboardEventsService.notifyChange();
+        return toMyWorkshopResponse(savedEnrollment);
     }
 
     // Materiales del alumno vinculado al usuario que ha iniciado sesion.
