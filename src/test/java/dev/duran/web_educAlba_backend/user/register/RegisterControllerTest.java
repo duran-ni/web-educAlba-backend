@@ -45,7 +45,7 @@ class RegisterControllerTest {
     void testRegister_ReturnsCreated() throws Exception {
         String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
         RegisterRequest request = new RegisterRequest("Lucía", "García López",
-                "new" + System.currentTimeMillis() + "@educalba.com", encodedPassword,
+                "new" + System.currentTimeMillis() + "@example.com", encodedPassword,
                 "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
@@ -58,7 +58,7 @@ class RegisterControllerTest {
     @DisplayName("The same email cannot be registered twice")
     void testRegister_DuplicateEmail_ReturnsConflict() throws Exception {
         String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
-        RegisterRequest request = new RegisterRequest("Lucía", "García López", "duplicado@educalba.com",
+        RegisterRequest request = new RegisterRequest("Lucía", "García López", "duplicado@example.com",
                 encodedPassword, "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
@@ -76,7 +76,7 @@ class RegisterControllerTest {
     @DisplayName("A password that is too short is rejected")
     void testRegister_PasswordTooShort_ReturnsBadRequest() throws Exception {
         String encodedShortPassword = Base64.getEncoder().encodeToString("abc123".getBytes());
-        RegisterRequest request = new RegisterRequest("Lucía", "García López", "corta@educalba.com",
+        RegisterRequest request = new RegisterRequest("Lucía", "García López", "corta@example.com",
                 encodedShortPassword, "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         mockMvc.perform(post("/api/auth/register")
