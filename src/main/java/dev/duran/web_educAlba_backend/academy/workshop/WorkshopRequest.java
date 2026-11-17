@@ -1,8 +1,10 @@
 package dev.duran.web_educAlba_backend.academy.workshop;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -25,7 +27,11 @@ public record WorkshopRequest(
     String room,
 
     @NotNull
-    Boolean active
+    Boolean active,
+
+    @NotNull
+    @DecimalMin(value = "0.0", message = "El precio no puede ser negativo")
+    BigDecimal price
 ) {
 
 }
