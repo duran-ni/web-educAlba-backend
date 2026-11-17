@@ -98,6 +98,27 @@ class PublicWorkshopControllerTest {
     }
 
     @Test
+    @DisplayName("A workshop whose date has already passed is excluded from the public list, even if still active")
+    void testGetAllActive_ExcludesPastWorkshops() throws Exception {
+        LocalDate today = LocalDate.now();
+        workshopRepository.save(Workshop.builder()
+            .name("Ya pasado")
+            .date(today.minusDays(1))
+            .active(true)
+            .build());
+        workshopRepository.save(Workshop.builder()
+            .name("Hoy mismo")
+            .date(today)
+            .active(true)
+            .build());
+
+        mockMvc.perform(get("/api/public/workshops"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].name").value("Hoy mismo"));
+    }
+
+    @Test
     @DisplayName("An empty list is returned when there are no active workshops")
     void testGetAllActive_NoActiveWorkshops_ReturnsEmptyList() throws Exception {
         mockMvc.perform(get("/api/public/workshops"))
