@@ -44,7 +44,7 @@ class StudentRepositoryTest {
 
     @Test
     void findsStudentByLinkedUserId() {
-        UserEntity user = UserEntity.builder().email("family@educalba.com").password("hashed-password").build();
+        UserEntity user = UserEntity.builder().email("family@example.com").password("hashed-password").build();
         entityManager.persistAndFlush(user);
 
         Student student = Student.builder().firstName("Lucía").lastName("García").user(user).build();
