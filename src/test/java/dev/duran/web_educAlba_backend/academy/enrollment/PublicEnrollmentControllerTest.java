@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -50,7 +51,7 @@ class PublicEnrollmentControllerTest {
     }
 
     private Long createWorkshop(String name) throws Exception {
-        WorkshopRequest request = new WorkshopRequest(name, "Description", LocalDate.now().plusDays(7), LocalTime.of(16, 0), "8-12", "Room A", true);
+        WorkshopRequest request = new WorkshopRequest(name, "Description", LocalDate.now().plusDays(7), LocalTime.of(16, 0), "8-12", "Room A", true, BigDecimal.valueOf(15));
 
         String body = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
