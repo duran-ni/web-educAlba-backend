@@ -47,4 +47,34 @@ class EnrollmentRepositoryTest {
 
         assertThat(result).containsExactly(enrollment);
     }
+
+    @Test
+    void existsByStudentIdAndWorkshopIdReturnsTrueWhenAlreadyEnrolled() {
+        Student student = Student.builder().firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().name("Robótica").date(LocalDate.now()).build();
+        entityManager.persistAndFlush(student);
+        entityManager.persistAndFlush(workshop);
+
+        entityManager.persistAndFlush(Enrollment.builder()
+            .student(student)
+            .workshop(workshop)
+            .enrollmentDate(LocalDate.now())
+            .build());
+
+        boolean result = enrollmentRepository.existsByStudentIdAndWorkshopId(student.getId(), workshop.getId());
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void existsByStudentIdAndWorkshopIdReturnsFalseWhenNotEnrolled() {
+        Student student = Student.builder().firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().name("Robótica").date(LocalDate.now()).build();
+        entityManager.persistAndFlush(student);
+        entityManager.persistAndFlush(workshop);
+
+        boolean result = enrollmentRepository.existsByStudentIdAndWorkshopId(student.getId(), workshop.getId());
+
+        assertThat(result).isFalse();
+    }
 }
