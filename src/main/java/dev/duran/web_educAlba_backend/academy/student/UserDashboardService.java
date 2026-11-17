@@ -81,7 +81,8 @@ public class UserDashboardService {
             workshop.getName(),
             workshop.getDate(),
             workshop.getTime(),
-            enrollment.getProgress()
+            enrollment.getProgress(),
+            workshop.getPrice()
         );
     }
 }
