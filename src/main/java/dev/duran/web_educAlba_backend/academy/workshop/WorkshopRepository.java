@@ -8,8 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WorkshopRepository extends JpaRepository<Workshop, Long> {
 
-    // Listado de talleres activos
-    List<Workshop> findByActiveTrue();
+    // Listado publico de talleres activos y aun no pasados (su fecha es
+    // hoy o posterior), para que un taller desaparezca automaticamente de
+    // la web publica en cuanto pasa su fecha, sin tener que desactivarlo a mano
+    List<Workshop> findByActiveTrueAndDateGreaterThanEqual(LocalDate date);
 
     // Proximo taller destacado en Inicio: el mas cercano en el futuro
     Optional<Workshop> findFirstByActiveTrueAndDateAfterOrderByDateAsc(LocalDate date);
