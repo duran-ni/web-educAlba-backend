@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -55,7 +56,7 @@ class UserDashboardServiceTest {
     @Test
     void returnsTheWorkshopsTheStudentIsEnrolledIn() {
         Student student = Student.builder().id(1L).firstName("Lucía").build();
-        Workshop workshop = Workshop.builder().id(5L).name("Robótica").date(LocalDate.of(2026, 11, 10)).time(LocalTime.of(17, 0)).build();
+        Workshop workshop = Workshop.builder().id(5L).name("Robótica").date(LocalDate.of(2026, 11, 10)).time(LocalTime.of(17, 0)).price(BigDecimal.valueOf(30)).build();
         Enrollment enrollment = Enrollment.builder().id(20L).student(student).workshop(workshop).progress("iniciado").build();
 
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
@@ -67,6 +68,7 @@ class UserDashboardServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).workshopName()).isEqualTo("Robótica");
         assertThat(result.get(0).progress()).isEqualTo("iniciado");
+        assertThat(result.get(0).price()).isEqualByComparingTo(BigDecimal.valueOf(30));
     }
 
     @Test
