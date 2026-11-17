@@ -110,7 +110,7 @@ public class WorkshopService {
 
     @Transactional(readOnly = true)
     public List<WorkshopResponse> getAllActive() {
-        return workshopRepository.findByActiveTrue().stream()
+        return workshopRepository.findByActiveTrueAndDateGreaterThanEqual(LocalDate.now()).stream()
                 .sorted(Comparator.comparing(Workshop::getDate))
                 .map(this::toResponse)
                 .toList();
