@@ -81,7 +81,7 @@ class PasswordResetControllerTest {
         @Test
         @DisplayName("Requesting a reset for a registered email sends an email and returns no content")
         void testForgotPassword_RegisteredEmail_ReturnsNoContent() throws Exception {
-                String email = registerTestUser("recuperar" + System.currentTimeMillis() + "@educalba.com");
+                String email = registerTestUser("recuperar" + System.currentTimeMillis() + "@example.com");
                 ForgotPasswordRequest request = new ForgotPasswordRequest(email);
 
                 mockMvc.perform(post("/api/auth/forgot-password")
@@ -95,7 +95,7 @@ class PasswordResetControllerTest {
         @Test
         @DisplayName("Requesting a reset for an unregistered email also returns no content, without sending an email")
         void testForgotPassword_UnregisteredEmail_ReturnsNoContentWithoutSendingEmail() throws Exception {
-                ForgotPasswordRequest request = new ForgotPasswordRequest("noexiste@educalba.com");
+                ForgotPasswordRequest request = new ForgotPasswordRequest("noexiste@example.com");
 
                 mockMvc.perform(post("/api/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +108,7 @@ class PasswordResetControllerTest {
         @Test
         @DisplayName("Resetting the password with a valid token succeeds and consumes the token")
         void testResetPassword_ValidToken_ReturnsNoContent() throws Exception {
-                String email = registerTestUser("token-valido" + System.currentTimeMillis() + "@educalba.com");
+                String email = registerTestUser("token-valido" + System.currentTimeMillis() + "@example.com");
 
                 mockMvc.perform(post("/api/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ class PasswordResetControllerTest {
         @Test
         @DisplayName("Resetting the password with a new password that is too short is rejected")
         void testResetPassword_PasswordTooShort_ReturnsBadRequest() throws Exception {
-                String email = registerTestUser("clave-corta" + System.currentTimeMillis() + "@educalba.com");
+                String email = registerTestUser("clave-corta" + System.currentTimeMillis() + "@example.com");
 
                 mockMvc.perform(post("/api/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +166,7 @@ class PasswordResetControllerTest {
         @Test
         @DisplayName("Resetting the password with an expired token is rejected and the token is removed")
         void testResetPassword_ExpiredToken_ReturnsBadRequest() throws Exception {
-                String email = registerTestUser("token-caducado" + System.currentTimeMillis() + "@educalba.com");
+                String email = registerTestUser("token-caducado" + System.currentTimeMillis() + "@example.com");
                 UserEntity user = userRepository.findByEmail(email).orElseThrow();
 
                 PasswordResetToken expiredToken = PasswordResetToken.builder()
