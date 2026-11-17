@@ -3,6 +3,8 @@ package dev.duran.web_educAlba_backend.academy.enrollment;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRequest;
 import dev.duran.web_educAlba_backend.academy.workshop.WorkshopResponse;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,7 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -40,6 +45,11 @@ class PublicEnrollmentControllerTest {
 
     @Autowired
     ObjectMapper mapper;
+
+    // Sustituye al JavaMailSender real por un doble de prueba, para no
+    // enviar emails de verdad al ejecutar los tests
+    @MockitoBean
+    JavaMailSender javaMailSender;
 
     MockMvc mockMvc;
 
@@ -80,6 +90,20 @@ class PublicEnrollmentControllerTest {
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$[0].workshopName").value("Ceramics"))
             .andExpect(jsonPath("$[1].workshopName").value("Robotics"));
+    }
+
+    @Test
+    @DisplayName("Enrolling from the public form sends a notification email to the academy")
+    void testCreate_SendsNotificationEmail() throws Exception {
+        Long workshopId = createWorkshop("Ceramics");
+        PublicEnrollmentRequest request = new PublicEnrollmentRequest("Ana García", 8, "612345678", List.of(workshopId));
+
+        mockMvc.perform(post("/api/public/enrollments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+            .andExpect(status().isCreated());
+
+        verify(javaMailSender).send(any(SimpleMailMessage.class));
     }
 
     @Test
