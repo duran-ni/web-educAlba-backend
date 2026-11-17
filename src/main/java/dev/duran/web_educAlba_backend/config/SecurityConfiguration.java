@@ -47,7 +47,8 @@ public class SecurityConfiguration {
                                                 "/api/auth/forgot-password",
                                                 "/api/auth/reset-password",
                                                 "/api/admin/**",
-                                                "/api/public/**"))
+                                                "/api/public/**",
+                                                "/api/dashboard/**"))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                                 // Sin cabecera "WWW-Authenticate" en el 401, el navegador no abre su
