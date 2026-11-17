@@ -40,7 +40,7 @@ class RegisterServiceTest {
     @Test
     void testRegister_WhenFamilyRoleIsMissing_ThrowsIllegalStateException() {
         String encodedPassword = Base64.getEncoder().encodeToString("ClaveSegura123".getBytes());
-        RegisterRequest request = new RegisterRequest("Lucía", "García", "lucia@educalba.com", encodedPassword,
+        RegisterRequest request = new RegisterRequest("Lucía", "García", "lucia@example.com", encodedPassword,
                 "Clases de Refuerzo", EducationalStage.PRIMARIA);
 
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
