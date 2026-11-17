@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -57,7 +58,7 @@ class WorkshopControllerTest {
     @DisplayName("A new workshop can be created")
     void testCreate_ReturnsCreated() throws Exception {
         WorkshopRequest request = new WorkshopRequest("Robotics", "Introduction to robotics",
-                LocalDate.now().plusDays(10), LocalTime.of(10, 0), "8-12", "Room A", true);
+                LocalDate.now().plusDays(10), LocalTime.of(10, 0), "8-12", "Room A", true, BigDecimal.valueOf(25));
 
         mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
@@ -66,14 +67,15 @@ class WorkshopControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Robotics"))
                 .andExpect(jsonPath("$.time").value("10:00:00"))
-                .andExpect(jsonPath("$.active").value(true));
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.price").value(25));
     }
 
     @Test
     @DisplayName("All workshops can be listed")
     void testGetAll_ReturnsOk() throws Exception {
         WorkshopRequest request = new WorkshopRequest("Painting", "Watercolor basics", LocalDate.now().plusDays(5),
-                LocalTime.of(17, 30), "6-10", "Room B", true);
+                LocalTime.of(17, 30), "6-10", "Room B", true, BigDecimal.valueOf(12));
 
         mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
@@ -91,7 +93,7 @@ class WorkshopControllerTest {
     @DisplayName("An existing workshop can be updated")
     void testUpdate_ReturnsOk() throws Exception {
         WorkshopRequest createRequest = new WorkshopRequest("Music", "Guitar for beginners",
-                LocalDate.now().plusDays(15), LocalTime.of(16, 0), "10-14", "Room C", true);
+                LocalDate.now().plusDays(15), LocalTime.of(16, 0), "10-14", "Room C", true, BigDecimal.valueOf(18));
 
         String createBody = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
@@ -104,7 +106,7 @@ class WorkshopControllerTest {
 
         WorkshopResponse created = mapper.readValue(createBody, WorkshopResponse.class);
         WorkshopRequest updateRequest = new WorkshopRequest("Music", "Guitar and ukulele for beginners",
-                LocalDate.now().plusDays(15), LocalTime.of(17, 0), "10-14", "Room D", false);
+                LocalDate.now().plusDays(15), LocalTime.of(17, 0), "10-14", "Room D", false, BigDecimal.valueOf(22));
 
         mockMvc.perform(put("/api/admin/workshops/" + created.id())
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
@@ -113,14 +115,15 @@ class WorkshopControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.room").value("Room D"))
                 .andExpect(jsonPath("$.time").value("17:00:00"))
-                .andExpect(jsonPath("$.active").value(false));
+                .andExpect(jsonPath("$.active").value(false))
+                .andExpect(jsonPath("$.price").value(22));
     }
 
     @Test
     @DisplayName("A deleted workshop can no longer be found")
     void testDelete_ThenGetReturnsNotFound() throws Exception {
         WorkshopRequest createRequest = new WorkshopRequest("Theatre", "Improv workshop", LocalDate.now().plusDays(20),
-                LocalTime.of(11, 0), "12-16", "Room E", true);
+                LocalTime.of(11, 0), "12-16", "Room E", true, BigDecimal.valueOf(8));
 
         String createBody = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
@@ -155,10 +158,23 @@ class WorkshopControllerTest {
     }
 
     @Test
+    @DisplayName("Creating a workshop with a negative price is rejected")
+    void testCreate_NegativePrice_ReturnsBadRequest() throws Exception {
+        WorkshopRequest request = new WorkshopRequest("Dance", "Intro to dance", LocalDate.now().plusDays(6),
+                LocalTime.of(18, 0), "6-10", "Room F", true, BigDecimal.valueOf(-5));
+
+        mockMvc.perform(post("/api/admin/workshops")
+                .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("A workshop with active enrollments cannot be deleted")
     void testDelete_WorkshopWithEnrollments_ReturnsConflict() throws Exception {
         WorkshopRequest workshopRequest = new WorkshopRequest("Pottery", "Clay basics", LocalDate.now().plusDays(12),
-                LocalTime.of(10, 0), "6-10", "Room G", true);
+                LocalTime.of(10, 0), "6-10", "Room G", true, BigDecimal.valueOf(14));
 
         String workshopBody = mockMvc.perform(post("/api/admin/workshops")
                 .with(httpBasic(ADMIN_EMAIL, ADMIN_PASSWORD))
