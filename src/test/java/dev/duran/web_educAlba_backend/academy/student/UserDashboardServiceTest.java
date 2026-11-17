@@ -2,6 +2,9 @@ package dev.duran.web_educAlba_backend.academy.student;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -16,9 +19,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import dev.duran.web_educAlba_backend.academy.dashboard.DashboardEventsService;
+import dev.duran.web_educAlba_backend.academy.enrollment.AlreadyEnrolledException;
 import dev.duran.web_educAlba_backend.academy.enrollment.Enrollment;
 import dev.duran.web_educAlba_backend.academy.enrollment.EnrollmentRepository;
 import dev.duran.web_educAlba_backend.academy.workshop.Workshop;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopNotFoundException;
+import dev.duran.web_educAlba_backend.academy.workshop.WorkshopRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UserDashboardServiceTest {
@@ -30,14 +37,25 @@ class UserDashboardServiceTest {
     private EnrollmentRepository enrollmentRepository;
 
     @Mock
+    private WorkshopRepository workshopRepository;
+
+    @Mock
     private MaterialService materialService;
+
+    @Mock
+    private DashboardEventsService dashboardEventsService;
+
+    private UserDashboardService newService() {
+        return new UserDashboardService(studentRepository, enrollmentRepository, workshopRepository,
+                materialService, dashboardEventsService);
+    }
 
     @Test
     void returnsTheProfileOfTheStudentLinkedToTheUser() {
         Student student = Student.builder().id(1L).firstName("Lucía").lastName("García").build();
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
         StudentResponse result = service.getMyProfile(10L);
 
         assertThat(result.firstName()).isEqualTo("Lucía");
@@ -47,7 +65,7 @@ class UserDashboardServiceTest {
     void throwsWhenNoStudentIsLinkedToTheUser() {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.empty());
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
 
         assertThatThrownBy(() -> service.getMyProfile(10L))
             .isInstanceOf(IllegalStateException.class);
@@ -62,7 +80,7 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(1L)).thenReturn(List.of(enrollment));
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
         List<MyWorkshopResponse> result = service.getMyWorkshops(10L);
 
         assertThat(result).hasSize(1);
@@ -77,7 +95,7 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(1L)).thenReturn(List.of());
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
         List<MyWorkshopResponse> result = service.getMyWorkshops(10L);
 
         assertThat(result).isEmpty();
@@ -95,7 +113,7 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(materialService.getByStudentId(1L)).thenReturn(List.of(material));
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
         List<MaterialResponse> result = service.getMyMaterials(10L);
 
         assertThat(result).hasSize(1);
@@ -109,9 +127,95 @@ class UserDashboardServiceTest {
         when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
         when(materialService.getByStudentId(1L)).thenReturn(List.of());
 
-        UserDashboardService service = new UserDashboardService(studentRepository, enrollmentRepository, materialService);
+        UserDashboardService service = newService();
         List<MaterialResponse> result = service.getMyMaterials(10L);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void enrollsTheLinkedStudentInAnActiveUpcomingWorkshop() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().id(5L).name("Robótica")
+            .date(LocalDate.now().plusDays(3)).time(LocalTime.of(17, 0)).active(true)
+            .price(BigDecimal.valueOf(30)).build();
+
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(workshopRepository.findById(5L)).thenReturn(Optional.of(workshop));
+        when(enrollmentRepository.existsByStudentIdAndWorkshopId(1L, 5L)).thenReturn(false);
+        when(enrollmentRepository.save(any(Enrollment.class))).thenAnswer(invocation -> {
+            Enrollment enrollment = invocation.getArgument(0);
+            enrollment.setId(99L);
+            return enrollment;
+        });
+
+        UserDashboardService service = newService();
+        MyWorkshopResponse result = service.enrollInWorkshop(10L, 5L);
+
+        assertThat(result.enrollmentId()).isEqualTo(99L);
+        assertThat(result.workshopName()).isEqualTo("Robótica");
+        verify(dashboardEventsService).notifyChange();
+    }
+
+    @Test
+    void throwsWhenTheWorkshopDoesNotExist() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(workshopRepository.findById(5L)).thenReturn(Optional.empty());
+
+        UserDashboardService service = newService();
+
+        assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
+            .isInstanceOf(WorkshopNotFoundException.class);
+        verify(enrollmentRepository, never()).save(any());
+    }
+
+    @Test
+    void throwsWhenTheWorkshopIsInactive() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().id(5L).name("Robótica")
+            .date(LocalDate.now().plusDays(3)).active(false).build();
+
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(workshopRepository.findById(5L)).thenReturn(Optional.of(workshop));
+
+        UserDashboardService service = newService();
+
+        assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
+            .isInstanceOf(WorkshopNotFoundException.class);
+        verify(enrollmentRepository, never()).save(any());
+    }
+
+    @Test
+    void throwsWhenTheWorkshopDateHasAlreadyPassed() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().id(5L).name("Robótica")
+            .date(LocalDate.now().minusDays(1)).active(true).build();
+
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(workshopRepository.findById(5L)).thenReturn(Optional.of(workshop));
+
+        UserDashboardService service = newService();
+
+        assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
+            .isInstanceOf(WorkshopNotFoundException.class);
+        verify(enrollmentRepository, never()).save(any());
+    }
+
+    @Test
+    void throwsWhenTheStudentIsAlreadyEnrolledInTheWorkshop() {
+        Student student = Student.builder().id(1L).firstName("Lucía").build();
+        Workshop workshop = Workshop.builder().id(5L).name("Robótica")
+            .date(LocalDate.now().plusDays(3)).active(true).build();
+
+        when(studentRepository.findByUser_Id(10L)).thenReturn(Optional.of(student));
+        when(workshopRepository.findById(5L)).thenReturn(Optional.of(workshop));
+        when(enrollmentRepository.existsByStudentIdAndWorkshopId(1L, 5L)).thenReturn(true);
+
+        UserDashboardService service = newService();
+
+        assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
+            .isInstanceOf(AlreadyEnrolledException.class);
+        verify(enrollmentRepository, never()).save(any());
     }
 }
