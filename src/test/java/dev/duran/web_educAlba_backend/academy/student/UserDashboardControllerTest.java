@@ -1,5 +1,7 @@
 package dev.duran.web_educAlba_backend.academy.student;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,7 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -60,6 +65,11 @@ class UserDashboardControllerTest {
 
     @Autowired
     MaterialRepository materialRepository;
+
+    // Sustituye al JavaMailSender real por un doble de prueba, para no
+    // enviar emails de verdad al ejecutar los tests
+    @MockitoBean
+    JavaMailSender javaMailSender;
 
     MockMvc mockMvc;
 
@@ -187,6 +197,7 @@ class UserDashboardControllerTest {
         Long userId = userRepository.findByEmail(email).orElseThrow().getId();
         Student student = studentRepository.findByUser_Id(userId).orElseThrow();
         assertThat(enrollmentRepository.existsByStudentIdAndWorkshopId(student.getId(), workshop.getId())).isTrue();
+        verify(javaMailSender).send(any(SimpleMailMessage.class));
     }
 
     @Test
