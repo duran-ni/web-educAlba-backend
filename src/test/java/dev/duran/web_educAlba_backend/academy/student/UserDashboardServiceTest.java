@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import dev.duran.web_educAlba_backend.academy.dashboard.DashboardEventsService;
 import dev.duran.web_educAlba_backend.academy.enrollment.AlreadyEnrolledException;
@@ -45,9 +47,13 @@ class UserDashboardServiceTest {
     @Mock
     private DashboardEventsService dashboardEventsService;
 
+    @Mock
+    private JavaMailSender javaMailSender;
+
     private UserDashboardService newService() {
         return new UserDashboardService(studentRepository, enrollmentRepository, workshopRepository,
-                materialService, dashboardEventsService);
+                materialService, dashboardEventsService, javaMailSender,
+                "contacto@example.com", "no-reply@example.com");
     }
 
     @Test
@@ -155,6 +161,7 @@ class UserDashboardServiceTest {
         assertThat(result.enrollmentId()).isEqualTo(99L);
         assertThat(result.workshopName()).isEqualTo("Robótica");
         verify(dashboardEventsService).notifyChange();
+        verify(javaMailSender).send(any(SimpleMailMessage.class));
     }
 
     @Test
@@ -168,6 +175,7 @@ class UserDashboardServiceTest {
         assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
             .isInstanceOf(WorkshopNotFoundException.class);
         verify(enrollmentRepository, never()).save(any());
+        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
     }
 
     @Test
@@ -184,6 +192,7 @@ class UserDashboardServiceTest {
         assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
             .isInstanceOf(WorkshopNotFoundException.class);
         verify(enrollmentRepository, never()).save(any());
+        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
     }
 
     @Test
@@ -200,6 +209,7 @@ class UserDashboardServiceTest {
         assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
             .isInstanceOf(WorkshopNotFoundException.class);
         verify(enrollmentRepository, never()).save(any());
+        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
     }
 
     @Test
@@ -217,5 +227,6 @@ class UserDashboardServiceTest {
         assertThatThrownBy(() -> service.enrollInWorkshop(10L, 5L))
             .isInstanceOf(AlreadyEnrolledException.class);
         verify(enrollmentRepository, never()).save(any());
+        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
     }
 }
