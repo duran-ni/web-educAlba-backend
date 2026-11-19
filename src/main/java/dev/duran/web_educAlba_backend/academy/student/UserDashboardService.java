@@ -3,6 +3,9 @@ package dev.duran.web_educAlba_backend.academy.student;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,15 +30,23 @@ public class UserDashboardService {
     private final WorkshopRepository workshopRepository;
     private final MaterialService materialService;
     private final DashboardEventsService dashboardEventsService;
+    private final JavaMailSender javaMailSender;
+    private final String contactRecipient;
+    private final String fromAddress;
 
     public UserDashboardService(StudentRepository studentRepository, EnrollmentRepository enrollmentRepository,
             WorkshopRepository workshopRepository, MaterialService materialService,
-            DashboardEventsService dashboardEventsService) {
+            DashboardEventsService dashboardEventsService, JavaMailSender javaMailSender,
+            @Value("${app.mail.contact-recipient}") String contactRecipient,
+            @Value("${app.mail.from-address}") String fromAddress) {
         this.studentRepository = studentRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.workshopRepository = workshopRepository;
         this.materialService = materialService;
         this.dashboardEventsService = dashboardEventsService;
+        this.javaMailSender = javaMailSender;
+        this.contactRecipient = contactRecipient;
+        this.fromAddress = fromAddress;
     }
 
     @Transactional(readOnly = true)
@@ -82,7 +93,25 @@ public class UserDashboardService {
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
         dashboardEventsService.notifyChange();
+        sendNotificationEmail(student, workshop);
         return toMyWorkshopResponse(savedEnrollment);
+    }
+
+    // Construye y envia a la academia el correo de aviso de que un alumno
+    // ya registrado se ha apuntado a un taller desde su propio Dashboard
+    // (boton "Apuntarme"), igual que ya se hace al recibir una inscripcion
+    // desde el formulario publico "Apuntate ya"
+    private void sendNotificationEmail(Student student, Workshop workshop) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromAddress);
+        mailMessage.setTo(contactRecipient);
+        mailMessage.setSubject("Nueva inscripcion en talleres: " + student.getFirstName());
+        mailMessage.setText(
+            "Nombre del alumno/a: " + student.getFirstName() + " " + student.getLastName() + "\n"
+                + "Telefono de contacto: " + student.getPhone() + "\n\n"
+                + "Taller: " + workshop.getName());
+
+        javaMailSender.send(mailMessage);
     }
 
     // Materiales del alumno vinculado al usuario que ha iniciado sesion.
